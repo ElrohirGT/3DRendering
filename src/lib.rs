@@ -1,4 +1,5 @@
 use camera::Camera;
+use nalgebra_glm::Vec3;
 use render::Uniforms;
 use vertex::Vertex;
 
@@ -24,5 +25,8 @@ pub enum Message {
 pub struct Model {
     pub vertex_array: Vec<Vertex>,
     pub uniforms: Uniforms,
+    pub rotation: Vec3,
+    pub translation: Vec3,
+    pub scale: f32,
     pub camera: Camera,
 }

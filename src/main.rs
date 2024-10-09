@@ -67,10 +67,22 @@ fn main() {
             .get_keys_pressed(KeyRepeat::Yes)
             .into_iter()
             .filter_map(|key| match key {
-                Key::Left => Some(Message::RotateCamera(PLAYER_ROTATION_SPEED, 0.0)),
-                Key::Right => Some(Message::RotateCamera(-PLAYER_ROTATION_SPEED, 0.0)),
-                Key::Up => Some(Message::RotateCamera(0.0, -PLAYER_ROTATION_SPEED)),
-                Key::Down => Some(Message::RotateCamera(0.0, PLAYER_ROTATION_SPEED)),
+                Key::Left => {
+                    should_update = true;
+                    Some(Message::RotateCamera(PLAYER_ROTATION_SPEED, 0.0))
+                }
+                Key::Right => {
+                    should_update = true;
+                    Some(Message::RotateCamera(-PLAYER_ROTATION_SPEED, 0.0))
+                }
+                Key::Up => {
+                    should_update = true;
+                    Some(Message::RotateCamera(0.0, -PLAYER_ROTATION_SPEED))
+                }
+                Key::Down => {
+                    should_update = true;
+                    Some(Message::RotateCamera(0.0, PLAYER_ROTATION_SPEED))
+                }
 
                 Key::W => Some(Message::ZoomCamera(PLAYER_SPEED)),
                 Key::S => Some(Message::ZoomCamera(-PLAYER_SPEED)),
@@ -106,6 +118,7 @@ fn main() {
         }
 
         if data.camera.has_changed() || should_update {
+            framebuffer.clear();
             render(&mut framebuffer, &data);
         }
         data.camera.reset_change();
@@ -152,19 +165,22 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
         Vec3::new(0.0, 1.0, 0.0),
     );
 
+    let scale = 100.0;
+    let rotation = Vec3::zeros();
+    let translation = Vec3::new(
+        (framebuffer_width / 2) as f32,
+        (framebuffer_height / 2) as f32,
+        0.0,
+    );
+
     Model {
         vertex_array: obj.get_vertex_array(),
         uniforms: Uniforms {
-            model_matrix: create_model_matrix(
-                Vec3::new(
-                    (framebuffer_width / 2) as f32,
-                    (framebuffer_height / 2) as f32,
-                    0.0,
-                ),
-                100.0,
-                Vec3::zeros(),
-            ),
+            model_matrix: create_model_matrix(translation, scale, rotation),
         },
+        scale,
+        rotation,
+        translation,
         camera,
     }
 }
@@ -172,11 +188,23 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
 fn update(data: Model, msg: Message) -> Model {
     match msg {
         Message::RotateCamera(delta_yaw, delta_pitch) => {
-            let Model { mut camera, .. } = data;
+            let Model {
+                rotation,
+                translation,
+                scale,
+                ..
+            } = data;
 
-            camera.rotate_cam(delta_yaw, delta_pitch);
+            let rotation = Vec3::new(rotation.x + delta_yaw, rotation.y + delta_pitch, rotation.z);
+            let uniforms = Uniforms {
+                model_matrix: create_model_matrix(translation, scale, rotation),
+            };
 
-            Model { camera, ..data }
+            Model {
+                rotation,
+                uniforms,
+                ..data
+            }
         }
         Message::ZoomCamera(delta_zoom) => {
             let Model { mut camera, .. } = data;

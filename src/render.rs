@@ -59,6 +59,24 @@ fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
+    let (sinx, cosx) = rotation.x.sin_cos();
+    let (siny, cosy) = rotation.y.sin_cos();
+    let (sinz, cosz) = rotation.z.sin_cos();
+
+    let rotation_x = Mat4::new(
+        1.0, 0.0, 0.0, 0.0, 0.0, cosx, -sinx, 0.0, 0.0, sinx, cosx, 0.0, 0.0, 0.0, 0.0, 1.0,
+    );
+
+    let rotation_y = Mat4::new(
+        cosy, 0.0, siny, 0.0, 0.0, 1.0, 0.0, 0.0, -siny, 0.0, cosy, 0.0, 0.0, 0.0, 0.0, 1.0,
+    );
+
+    let rotation_z = Mat4::new(
+        cosz, -sinz, 0.0, 0.0, sinz, cosz, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+    );
+
+    let rotation_matrix = rotation_z * rotation_y * rotation_x;
+
     Mat4::new(
         scale,
         0.0,
@@ -76,5 +94,5 @@ pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat
         0.0,
         0.0,
         1.0,
-    )
+    ) * rotation_matrix
 }
