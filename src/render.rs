@@ -1,12 +1,18 @@
 use nalgebra_glm::{Mat4, Vec2, Vec3, Vec4};
 
-use crate::{fragment::triangle, framebuffer::Framebuffer, vertex::Vertex};
+use crate::{fragment::triangle, framebuffer::Framebuffer, vertex::Vertex, Model};
 
 pub struct Uniforms {
-    model_matrix: Mat4,
+    pub model_matrix: Mat4,
 }
 
-pub fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
+pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
+    let Model {
+        vertex_array,
+        uniforms,
+        ..
+    } = data;
+
     // Vertex Shader
     let new_vertices: Vec<Vertex> = vertex_array
         .iter()

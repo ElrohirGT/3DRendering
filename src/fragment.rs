@@ -14,19 +14,14 @@ impl Fragment {
 
 pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
     let mut fragments = vec![];
-    let steps = 1e-10;
-    let direction = a.position - b.position;
+    let step_size = 1e-3;
+    let direction = b.position - a.position;
 
-    loop {
-        let new_position = a.position + steps * direction;
-        if new_position.x > b.position.x
-            && new_position.y > b.position.y
-            && new_position.z > b.position.z
-        {
-            break;
-        }
-
-        fragments.push(Fragment::new(new_position, Color::default()))
+    let mut accum = 0.0;
+    while accum < 1.0 {
+        let new_position = a.position + step_size * direction;
+        fragments.push(Fragment::new(new_position, Color::default()));
+        accum += step_size;
     }
 
     fragments
