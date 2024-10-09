@@ -1,3 +1,4 @@
+pub mod bmp;
 pub mod color;
 pub mod fragment;
 pub mod framebuffer;

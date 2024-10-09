@@ -1,16 +1,12 @@
-use nalgebra_glm::{Mat4, Vec3, Vec4};
+use nalgebra_glm::{Mat4, Vec2, Vec3, Vec4};
 
-use crate::{
-    fragment::{self, triangle},
-    framebuffer::Framebuffer,
-    vertex::Vertex,
-};
+use crate::{fragment::triangle, framebuffer::Framebuffer, vertex::Vertex};
 
 pub struct Uniforms {
     model_matrix: Mat4,
 }
 
-pub fn render(framebuffer: &Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
+pub fn render(framebuffer: &mut Framebuffer, uniforms: &Uniforms, vertex_array: &[Vertex]) {
     // Vertex Shader
     let new_vertices: Vec<Vertex> = vertex_array
         .iter()
@@ -29,8 +25,9 @@ pub fn render(framebuffer: &Framebuffer, uniforms: &Uniforms, vertex_array: &[Ve
     // Fragment Processing
     for fragment in fragments {
         // let color = fragment.color.to_hex();
-        framebuffer.set_current_color(fragment.color.into());
-        framebuffer.paint_point(fragment.position);
+        let position = Vec2::new(fragment.position.x, fragment.position.y);
+        framebuffer.set_current_color(fragment.color);
+        let _ = framebuffer.paint_point(position);
     }
 }
 
