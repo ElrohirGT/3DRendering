@@ -7,34 +7,34 @@ pub struct Uniforms {
 }
 
 pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
-    let Model {
-        vertex_array,
-        uniforms,
-        ..
-    } = data;
+    let Model { objs, uniforms, .. } = data;
 
-    // Vertex Shader
-    let new_vertices: Vec<Vertex> = vertex_array
-        .iter()
-        .map(|v| vertex_shader(v, uniforms))
-        .collect();
+    for obj in objs {
+        let vertex_array = obj.get_vertex_array();
 
-    // Primitive assembly
-    let triangles: Vec<&[Vertex]> = new_vertices.chunks(3).collect();
+        // Vertex Shader
+        let new_vertices: Vec<Vertex> = vertex_array
+            .iter()
+            .map(|v| vertex_shader(v, uniforms))
+            .collect();
 
-    // Rasterization
-    let mut fragments = vec![];
-    for tri in triangles {
-        fragments.extend(triangle(&tri[0], &tri[1], &tri[2]));
-    }
+        // Primitive assembly
+        let triangles: Vec<&[Vertex]> = new_vertices.chunks(3).collect();
 
-    // Fragment Processing
-    for fragment in fragments {
-        // let color = fragment.color.to_hex();
-        let position = Vec2::new(fragment.position.x, fragment.position.y);
-        // println!("Painting point: {position:?}");
-        framebuffer.set_current_color(fragment.color);
-        let _ = framebuffer.paint_point(position);
+        // Rasterization
+        let mut fragments = vec![];
+        for tri in triangles {
+            fragments.extend(triangle(&tri[0], &tri[1], &tri[2]));
+        }
+
+        // Fragment Processing
+        for fragment in fragments {
+            // let color = fragment.color.to_hex();
+            let position = Vec2::new(fragment.position.x, fragment.position.y);
+            // println!("Painting point: {position:?}");
+            framebuffer.set_current_color(fragment.color);
+            let _ = framebuffer.paint_point(position);
+        }
     }
 }
 

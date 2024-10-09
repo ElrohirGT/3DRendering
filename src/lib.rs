@@ -1,5 +1,6 @@
 use camera::Camera;
 use nalgebra_glm::Vec3;
+use obj::Obj;
 use render::Uniforms;
 use vertex::Vertex;
 
@@ -23,7 +24,7 @@ pub enum Message {
     ZoomCamera(f32),
 }
 pub struct Model {
-    pub vertex_array: Vec<Vertex>,
+    pub objs: Vec<Obj>,
     pub uniforms: Uniforms,
     pub rotation: Vec3,
     pub translation: Vec3,

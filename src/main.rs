@@ -174,7 +174,7 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
     );
 
     Model {
-        vertex_array: obj.get_vertex_array(),
+        objs: obj,
         uniforms: Uniforms {
             model_matrix: create_model_matrix(translation, scale, rotation),
         },
