@@ -21,27 +21,46 @@ impl Obj {
             },
         )?;
 
-        let mesh = &models[0].mesh;
+        let (vertices, normals, texcoords, indices) = models
+            .into_iter()
+            .map(|m| m.mesh)
+            .map(|mesh| {
+                let vertices: Vec<Vec3> = mesh
+                    .positions
+                    .chunks(3)
+                    .map(|v| Vec3::new(v[0], v[1], v[2]))
+                    .collect();
 
-        let vertices: Vec<Vec3> = mesh
-            .positions
-            .chunks(3)
-            .map(|v| Vec3::new(v[0], v[1], v[2]))
-            .collect();
+                let normals: Vec<Vec3> = mesh
+                    .normals
+                    .chunks(3)
+                    .map(|n| Vec3::new(n[0], n[1], n[2]))
+                    .collect();
 
-        let normals: Vec<Vec3> = mesh
-            .normals
-            .chunks(3)
-            .map(|n| Vec3::new(n[0], n[1], n[2]))
-            .collect();
+                let texcoords: Vec<Vec2> = mesh
+                    .texcoords
+                    .chunks(2)
+                    .map(|t| Vec2::new(t[0], t[1]))
+                    .collect();
 
-        let texcoords: Vec<Vec2> = mesh
-            .texcoords
-            .chunks(2)
-            .map(|t| Vec2::new(t[0], t[1]))
-            .collect();
+                let indices: Vec<usize> = mesh.indices.iter().map(|idx| *idx as usize).collect();
 
-        let indices = mesh.indices.iter().map(|idx| *idx as usize).collect();
+                (vertices, normals, texcoords, indices)
+            })
+            .reduce(|accum, mut current| {
+                let mut vertices = accum.0;
+                let mut normals = accum.1;
+                let mut texcoords = accum.2;
+                let mut indices = accum.3;
+
+                vertices.append(&mut current.0);
+                normals.append(&mut current.1);
+                texcoords.append(&mut current.2);
+                indices.append(&mut current.3);
+
+                (vertices, normals, texcoords, indices)
+            })
+            .unwrap();
 
         Ok(Obj {
             vertices,

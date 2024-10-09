@@ -67,14 +67,14 @@ fn main() {
             .get_keys_pressed(KeyRepeat::Yes)
             .into_iter()
             .filter_map(|key| match key {
-                // Key::Left => Some(Message::RotateCamera(PLAYER_ROTATION_SPEED, 0.0)),
-                // Key::Right => Some(Message::RotateCamera(-PLAYER_ROTATION_SPEED, 0.0)),
-                // Key::Up => Some(Message::RotateCamera(0.0, -PLAYER_ROTATION_SPEED)),
-                // Key::Down => Some(Message::RotateCamera(0.0, PLAYER_ROTATION_SPEED)),
-                //
-                // Key::W => Some(Message::ZoomCamera(PLAYER_SPEED)),
-                // Key::S => Some(Message::ZoomCamera(-PLAYER_SPEED)),
-                //
+                Key::Left => Some(Message::RotateCamera(PLAYER_ROTATION_SPEED, 0.0)),
+                Key::Right => Some(Message::RotateCamera(-PLAYER_ROTATION_SPEED, 0.0)),
+                Key::Up => Some(Message::RotateCamera(0.0, -PLAYER_ROTATION_SPEED)),
+                Key::Down => Some(Message::RotateCamera(0.0, PLAYER_ROTATION_SPEED)),
+
+                Key::W => Some(Message::ZoomCamera(PLAYER_SPEED)),
+                Key::S => Some(Message::ZoomCamera(-PLAYER_SPEED)),
+
                 // Key::Tab => {
                 //     should_update = true;
                 //     Some(match data.daytime {
@@ -136,7 +136,7 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
     // let asset_dir = args.next().expect("No asset directory received!");
     // println!("Reading assets from: {asset_dir}");
 
-    let obj = Obj::load("cube.obj").unwrap();
+    let obj = Obj::load("ship.obj").unwrap();
 
     let top_light = Light {
         position: Vec3::new(0.0, 20.0, 0.0),
@@ -170,5 +170,20 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
 }
 
 fn update(data: Model, msg: Message) -> Model {
-    data
+    match msg {
+        Message::RotateCamera(delta_yaw, delta_pitch) => {
+            let Model { mut camera, .. } = data;
+
+            camera.rotate_cam(delta_yaw, delta_pitch);
+
+            Model { camera, ..data }
+        }
+        Message::ZoomCamera(delta_zoom) => {
+            let Model { mut camera, .. } = data;
+
+            camera.zoom_cam(delta_zoom);
+
+            Model { camera, ..data }
+        }
+    }
 }

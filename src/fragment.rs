@@ -19,15 +19,15 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
     let step_size = 1.0e-3;
     let direction = b.transformed_position - a.transformed_position;
 
-    println!(
-        "From {:?} to {:?}, DIR={direction:?}",
-        b.transformed_position, a.transformed_position
-    );
+    // println!(
+    //     "From {:?} to {:?}, DIR={direction:?}",
+    //     b.transformed_position, a.transformed_position
+    // );
 
     let mut accum = 0.0;
     while accum <= 1.0 {
         let new_position = a.transformed_position + accum * direction;
-        println!("POINT: {new_position:?} t={accum}");
+        // println!("POINT: {new_position:?} t={accum}");
         fragments.push(Fragment::new(new_position, Color::pink()));
         accum += step_size;
     }

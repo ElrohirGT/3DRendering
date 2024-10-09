@@ -32,7 +32,7 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     for fragment in fragments {
         // let color = fragment.color.to_hex();
         let position = Vec2::new(fragment.position.x, fragment.position.y);
-        println!("Painting point: {position:?}");
+        // println!("Painting point: {position:?}");
         framebuffer.set_current_color(fragment.color);
         let _ = framebuffer.paint_point(position);
     }
@@ -41,7 +41,7 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
 fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
     let position = Vec4::new(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
     let transformed = uniforms.model_matrix * position;
-    println!("{position:?} TURNED INTO {transformed:?}");
+    // println!("{position:?} TURNED INTO {transformed:?}");
 
     let w = transformed.w;
     let transformed_position = Vec3::new(transformed.x / w, transformed.y / w, transformed.z / w);

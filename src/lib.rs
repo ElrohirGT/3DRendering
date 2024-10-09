@@ -17,7 +17,10 @@ pub fn equal(a: f32, b: f32, eps: f32) -> bool {
     (a - b).abs() < eps
 }
 
-pub enum Message {}
+pub enum Message {
+    RotateCamera(f32, f32),
+    ZoomCamera(f32),
+}
 pub struct Model {
     pub vertex_array: Vec<Vertex>,
     pub uniforms: Uniforms,
