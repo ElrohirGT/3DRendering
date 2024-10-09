@@ -14,13 +14,21 @@ impl Fragment {
 
 pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
     let mut fragments = vec![];
-    let step_size = 1e-3;
-    let direction = b.position - a.position;
+    // let distance = nalgebra_glm::distance(&b.transformed_position, &a.transformed_position);
+    // let step_size = 1.0 / (10.0 / 2.0 * distance);
+    let step_size = 1.0e-3;
+    let direction = b.transformed_position - a.transformed_position;
+
+    println!(
+        "From {:?} to {:?}, DIR={direction:?}",
+        b.transformed_position, a.transformed_position
+    );
 
     let mut accum = 0.0;
-    while accum < 1.0 {
-        let new_position = a.position + step_size * direction;
-        fragments.push(Fragment::new(new_position, Color::default()));
+    while accum <= 1.0 {
+        let new_position = a.transformed_position + accum * direction;
+        println!("POINT: {new_position:?} t={accum}");
+        fragments.push(Fragment::new(new_position, Color::pink()));
         accum += step_size;
     }
 

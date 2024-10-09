@@ -38,7 +38,7 @@ fn main() {
     window.set_cursor_visibility(true);
     let mouse = Mouse::new();
 
-    let target_framerate = 1;
+    let target_framerate = 60;
     let frame_delay = Duration::from_millis(1000 / target_framerate);
 
     let mut data = init(framebuffer_width, framebuffer_height);
@@ -155,7 +155,15 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
     Model {
         vertex_array: obj.get_vertex_array(),
         uniforms: Uniforms {
-            model_matrix: create_model_matrix(Vec3::zeros(), 10.0, Vec3::zeros()),
+            model_matrix: create_model_matrix(
+                Vec3::new(
+                    (framebuffer_width / 2) as f32,
+                    (framebuffer_height / 2) as f32,
+                    0.0,
+                ),
+                100.0,
+                Vec3::zeros(),
+            ),
         },
         camera,
     }
