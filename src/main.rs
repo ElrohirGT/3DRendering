@@ -155,7 +155,7 @@ fn init(framebuffer_width: usize, framebuffer_height: usize) -> Model {
     // let asset_dir = args.next().expect("No asset directory received!");
     // println!("Reading assets from: {asset_dir}");
 
-    let obj = Obj::load("ship.obj").unwrap();
+    let obj = Obj::load("BlueFalcon.obj").unwrap();
 
     let top_light = Light {
         position: Vec3::new(0.0, 20.0, 0.0),
