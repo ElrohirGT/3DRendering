@@ -13,8 +13,8 @@ use three_d_rendering::render::{create_model_matrix, render, Uniforms};
 use three_d_rendering::{framebuffer, render};
 use three_d_rendering::{Message, Model};
 
-const PLAYER_SPEED: f32 = 0.1;
-const PLAYER_ROTATION_SPEED: f32 = PI / 20.0;
+const ZOOM_SPEED: f32 = 1.0;
+const ROTATION_SPEED: f32 = PI / 20.0;
 
 fn main() {
     let window_width = 1080;
@@ -69,23 +69,29 @@ fn main() {
             .filter_map(|key| match key {
                 Key::Left => {
                     should_update = true;
-                    Some(Message::RotateCamera(PLAYER_ROTATION_SPEED, 0.0))
+                    Some(Message::RotateCamera(ROTATION_SPEED, 0.0))
                 }
                 Key::Right => {
                     should_update = true;
-                    Some(Message::RotateCamera(-PLAYER_ROTATION_SPEED, 0.0))
+                    Some(Message::RotateCamera(-ROTATION_SPEED, 0.0))
                 }
                 Key::Up => {
                     should_update = true;
-                    Some(Message::RotateCamera(0.0, -PLAYER_ROTATION_SPEED))
+                    Some(Message::RotateCamera(0.0, -ROTATION_SPEED))
                 }
                 Key::Down => {
                     should_update = true;
-                    Some(Message::RotateCamera(0.0, PLAYER_ROTATION_SPEED))
+                    Some(Message::RotateCamera(0.0, ROTATION_SPEED))
                 }
 
-                Key::W => Some(Message::ZoomCamera(PLAYER_SPEED)),
-                Key::S => Some(Message::ZoomCamera(-PLAYER_SPEED)),
+                Key::W => {
+                    should_update = true;
+                    Some(Message::ZoomCamera(ZOOM_SPEED))
+                }
+                Key::S => {
+                    should_update = true;
+                    Some(Message::ZoomCamera(-ZOOM_SPEED))
+                }
 
                 // Key::Tab => {
                 //     should_update = true;
@@ -195,7 +201,7 @@ fn update(data: Model, msg: Message) -> Model {
                 ..
             } = data;
 
-            let rotation = Vec3::new(rotation.x + delta_yaw, rotation.y + delta_pitch, rotation.z);
+            let rotation = Vec3::new(rotation.x + delta_pitch, rotation.y + delta_yaw, rotation.z);
             let uniforms = Uniforms {
                 model_matrix: create_model_matrix(translation, scale, rotation),
             };
@@ -207,11 +213,23 @@ fn update(data: Model, msg: Message) -> Model {
             }
         }
         Message::ZoomCamera(delta_zoom) => {
-            let Model { mut camera, .. } = data;
+            let Model {
+                rotation,
+                translation,
+                scale,
+                ..
+            } = data;
 
-            camera.zoom_cam(delta_zoom);
+            let scale = scale + delta_zoom;
+            let uniforms = Uniforms {
+                model_matrix: create_model_matrix(translation, scale, rotation),
+            };
 
-            Model { camera, ..data }
+            Model {
+                uniforms,
+                scale,
+                ..data
+            }
         }
     }
 }
