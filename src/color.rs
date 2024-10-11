@@ -22,6 +22,16 @@ impl Color {
         Color::new(0xff, 0x00, 0xff)
     }
 
+    pub const fn red() -> Self {
+        Color::new(0xff, 0, 0)
+    }
+    pub const fn blue() -> Self {
+        Color::new(0, 0xff, 0)
+    }
+    pub const fn green() -> Self {
+        Color::new(0, 0, 0xff)
+    }
+
     pub const fn default() -> Self {
         Self::black()
     }
