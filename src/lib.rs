@@ -13,6 +13,7 @@ pub mod light;
 pub mod material;
 pub mod obj;
 pub mod render;
+pub mod shader;
 pub mod vertex;
 
 pub fn equal(a: f32, b: f32, eps: f32) -> bool {

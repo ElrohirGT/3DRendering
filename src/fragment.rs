@@ -44,8 +44,8 @@ pub fn wireframe_triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment
 }
 
 pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
-    // let mut fragments = wireframe_triangle(v1, v2, v3);
-    let mut fragments = vec![];
+    let mut fragments = wireframe_triangle(v1, v2, v3);
+    // let mut fragments = vec![];
 
     let (a, b, c) = (
         v1.transformed_position,
@@ -55,7 +55,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
-    let step_size = 0.5;
+    let step_size = 5e-1;
     let mut currenty = min.y;
     while currenty <= max.y {
         let mut currentx = min.x;
@@ -90,13 +90,17 @@ fn calculate_bounding_box(v1: &Vec3, v2: &Vec3, v3: &Vec3) -> (Vec2, Vec2) {
     (Vec2::new(minx, miny), Vec2::new(maxx, maxy))
 }
 
+fn from_p1_to_p2(p1: &Vec3, p2: &Vec3) -> Vec3 {
+    p2 - p1
+}
+
 fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32) {
     let pa = a - p;
     let ab = b - a;
     let ac = c - a;
 
     let v = (pa.y * ab.x - pa.x * ab.y) / (ac.x * ab.y - ac.y * ab.x);
-    let u = (v * ac.y + pa.y) / ab.y;
+    let u = -(v * ac.y + pa.y) / ab.y;
     let w = 1.0 - u - v;
 
     (u, v, w)

@@ -1,6 +1,8 @@
 use nalgebra_glm::{Mat4, Vec2, Vec3, Vec4};
 
-use crate::{fragment::triangle, framebuffer::Framebuffer, vertex::Vertex, Model};
+use crate::{
+    fragment::triangle, framebuffer::Framebuffer, shader::vertex_shader, vertex::Vertex, Model,
+};
 
 pub struct Uniforms {
     pub model_matrix: Mat4,
@@ -35,26 +37,6 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
             framebuffer.set_current_color(fragment.color);
             let _ = framebuffer.paint_point(position);
         }
-    }
-}
-
-fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
-    let position = Vec4::new(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
-    let transformed = uniforms.model_matrix * position;
-    // println!("{position:?} TURNED INTO {transformed:?}");
-
-    let w = transformed.w;
-    let transformed_position = Vec3::new(transformed.x / w, transformed.y / w, transformed.z / w);
-
-    // Transform normal
-
-    Vertex {
-        transformed_position,
-        transformed_normal: vertex.normal,
-        position: vertex.position,
-        normal: vertex.normal,
-        tex_coords: vertex.tex_coords,
-        color: vertex.color,
     }
 }
 
