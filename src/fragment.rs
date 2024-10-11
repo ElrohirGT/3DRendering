@@ -35,8 +35,18 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
     fragments
 }
 
+pub fn wireframe_triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
+    line(v1, v2)
+        .into_iter()
+        .chain(line(v2, v3))
+        .chain(line(v3, v1))
+        .collect()
+}
+
 pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
+    // let mut fragments = wireframe_triangle(v1, v2, v3);
     let mut fragments = vec![];
+
     let (a, b, c) = (
         v1.transformed_position,
         v2.transformed_position,
@@ -45,13 +55,15 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
-    let step_size = 1e-3;
-    let mut currentx = min.x;
+    let step_size = 0.5;
     let mut currenty = min.y;
-
-    while currenty < max.y {
-        while currentx < max.x {
+    while currenty <= max.y {
+        let mut currentx = min.x;
+        while currentx <= max.x {
             let point = Vec3::new(currentx, currenty, 0.0);
+
+            // let triangle_area = edge_function(&a, &b, &c);
+            // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
 
             let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
 
@@ -89,3 +101,14 @@ fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32,
 
     (u, v, w)
 }
+
+// fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, area: f32) -> (f32, f32, f32) {
+//     let w1 = edge_function(b, c, p) / area;
+//     let w2 = edge_function(c, a, p) / area;
+//     let w3 = edge_function(a, b, p) / area;
+//
+//     (w1, w2, w3)
+// }
+// fn edge_function(a: &Vec3, b: &Vec3, c: &Vec3) -> f32 {
+//     (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)
+// }
