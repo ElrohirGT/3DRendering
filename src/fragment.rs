@@ -1,5 +1,5 @@
 use crate::{color::Color, vertex::Vertex};
-use nalgebra_glm::{Vec2, Vec3};
+use nalgebra_glm::{dot, Vec2, Vec3};
 
 pub struct Fragment {
     pub position: Vec3,
@@ -44,8 +44,8 @@ pub fn wireframe_triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment
 }
 
 pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
-    let mut fragments = wireframe_triangle(v1, v2, v3);
-    // let mut fragments = vec![];
+    // let mut fragments = wireframe_triangle(v1, v2, v3);
+    let mut fragments = vec![];
 
     let (a, b, c) = (
         v1.transformed_position,
@@ -55,21 +55,32 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
+    let light_dir = Vec3::new(0.0, 0.0, 5.0).normalize();
+
     let step_size = 5e-1;
     let mut currenty = min.y;
     while currenty <= max.y {
         let mut currentx = min.x;
         while currentx <= max.x {
-            let point = Vec3::new(currentx, currenty, 0.0);
+            let mut point = Vec3::new(currentx, currenty, v1.position.z);
+            let triangle_area = edge_function(&a, &b, &c);
+            let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
 
-            // let triangle_area = edge_function(&a, &b, &c);
-            // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
-
-            let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
+            // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
 
             if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w) {
+                point.z = u * a.z + v * b.z + w * c.z;
+                let normal = u * v1.transformed_normal
+                    + v * v2.transformed_normal
+                    + w * v3.transformed_normal;
+                // let normal = v1.transformed_normal;
+                let normal = normal.normalize();
+                let intensity = dot(&normal, &light_dir).max(0.0);
+                // println!("{normal:?} X {light_dir:?}");
+
                 let base_color = Color::new(100, 100, 100);
-                fragments.push(Fragment::new(point, base_color));
+                let lit_color = base_color * intensity;
+                fragments.push(Fragment::new(point, lit_color));
             }
 
             currentx += step_size;
@@ -80,7 +91,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
     fragments
 }
 
-fn calculate_bounding_box(v1: &Vec3, v2: &Vec3, v3: &Vec3) -> (Vec2, Vec2) {
+pub fn calculate_bounding_box(v1: &Vec3, v2: &Vec3, v3: &Vec3) -> (Vec2, Vec2) {
     let minx = v1.x.min(v2.x).min(v3.x);
     let miny = v1.y.min(v2.y).min(v3.y);
 
@@ -90,29 +101,25 @@ fn calculate_bounding_box(v1: &Vec3, v2: &Vec3, v3: &Vec3) -> (Vec2, Vec2) {
     (Vec2::new(minx, miny), Vec2::new(maxx, maxy))
 }
 
-fn from_p1_to_p2(p1: &Vec3, p2: &Vec3) -> Vec3 {
-    p2 - p1
-}
-
-fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32) {
-    let pa = a - p;
-    let ab = b - a;
-    let ac = c - a;
-
-    let v = (pa.y * ab.x - pa.x * ab.y) / (ac.x * ab.y - ac.y * ab.x);
-    let u = -(v * ac.y + pa.y) / ab.y;
-    let w = 1.0 - u - v;
-
-    (u, v, w)
-}
-
-// fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, area: f32) -> (f32, f32, f32) {
-//     let w1 = edge_function(b, c, p) / area;
-//     let w2 = edge_function(c, a, p) / area;
-//     let w3 = edge_function(a, b, p) / area;
+// pub fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3) -> (f32, f32, f32) {
+//     let pa = a - p;
+//     let ab = b - a;
+//     let ac = c - a;
 //
-//     (w1, w2, w3)
+//     let v = (pa.y * ab.x - pa.x * ab.y) / (ac.x * ab.y - ac.y * ab.x);
+//     let u = -(v * ac.y + pa.y) / ab.y;
+//     let w = 1.0 - u - v;
+//
+//     (u, v, w)
 // }
-// fn edge_function(a: &Vec3, b: &Vec3, c: &Vec3) -> f32 {
-//     (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)
-// }
+
+fn barycentric_coordinates(p: &Vec3, a: &Vec3, b: &Vec3, c: &Vec3, area: f32) -> (f32, f32, f32) {
+    let w1 = edge_function(b, c, p) / area;
+    let w2 = edge_function(c, a, p) / area;
+    let w3 = edge_function(a, b, p) / area;
+
+    (w1, w2, w3)
+}
+fn edge_function(a: &Vec3, b: &Vec3, c: &Vec3) -> f32 {
+    (c.x - a.x) * (b.y - a.y) - (c.y - a.y) * (b.x - a.x)
+}

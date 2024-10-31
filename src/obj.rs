@@ -81,9 +81,9 @@ impl Obj {
     pub fn get_vertex_array(&self) -> Vec<Vertex> {
         (self.indices.iter().map(|idx| {
             let position = *self.vertices.get(*idx).unwrap();
-            // let normal = *self.normals.get(*idx).unwrap();
-            // let tex_cords = *self.texcoords.get(*idx).unwrap();
-            Vertex::new(position, Vec3::new(0.0, 0.0, 1.0), Vec2::new(0.0, 0.0))
+            let normal = *self.normals.get(*idx).unwrap_or(&Vec3::new(0.4, 0.3, 0.3));
+            let tex_cords = *self.texcoords.get(*idx).unwrap_or(&Vec2::new(0.0, 0.0));
+            Vertex::new(position, normal, tex_cords)
         }))
         .collect()
     }

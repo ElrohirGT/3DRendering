@@ -32,10 +32,9 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
         // Fragment Processing
         for fragment in fragments {
             // let color = fragment.color.to_hex();
-            let position = Vec2::new(fragment.position.x, fragment.position.y);
             // println!("Painting point: {position:?}");
             framebuffer.set_current_color(fragment.color);
-            let _ = framebuffer.paint_point(position);
+            let _ = framebuffer.paint_point(fragment.position);
         }
     }
 }

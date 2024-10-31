@@ -1,6 +1,8 @@
-use nalgebra_glm::Vec2;
+use core::f32;
 
-use crate::{bmp::write_bmp_file, color::Color, equal};
+use crate::{bmp::write_bmp_file, color::Color};
+
+type Buffer = Vec<u32>;
 
 #[derive(Debug)]
 pub struct Framebuffer {
@@ -9,15 +11,19 @@ pub struct Framebuffer {
     pub buffer: Buffer,
     background_color: Color,
     current_color: Color,
-    empty_buffer: Vec<u32>,
+    empty_buffer: Buffer,
+    z_buffer: Vec<f32>,
+    empty_z_buffer: Vec<f32>,
 }
-
-type Buffer = Vec<u32>;
 
 fn create_filled_buffer(width: &usize, height: &usize, color: &Color) -> Buffer {
     let color_hex: u32 = color.into();
 
     (0..(width * height)).map(|_| color_hex).collect()
+}
+
+fn create_filled_z_buffer(width: &usize, height: &usize, default: f32) -> Vec<f32> {
+    (0..(width * height)).map(|_| default).collect()
 }
 
 #[derive(Debug)]
@@ -44,8 +50,10 @@ impl Framebuffer {
     pub fn new(width: usize, height: usize) -> Self {
         let background_color = Color::default();
         let current_color = Color::white();
-        let empty_buffer = create_filled_buffer(&width, &height, &Color::default());
+        let empty_buffer = create_filled_buffer(&width, &height, &Color::new(0, 255, 0));
         let buffer = empty_buffer.clone();
+        let z_buffer = create_filled_z_buffer(&width, &height, f32::NEG_INFINITY);
+        let empty_z_buffer = z_buffer.clone();
 
         Framebuffer {
             width,
@@ -54,6 +62,8 @@ impl Framebuffer {
             background_color,
             current_color,
             empty_buffer,
+            z_buffer,
+            empty_z_buffer,
         }
     }
 
@@ -61,7 +71,8 @@ impl Framebuffer {
     ///
     /// The implementation of this method assumes the background color will not change that much.
     pub fn clear(&mut self) {
-        self.buffer.clone_from(&self.empty_buffer)
+        self.buffer.clone_from(&self.empty_buffer);
+        self.z_buffer.clone_from(&self.empty_z_buffer);
     }
 
     /// Saves the current framebuffer as a background.
@@ -76,12 +87,13 @@ impl Framebuffer {
     /// The paint origin is located on the top left corner of the window.
     ///
     /// The color used is the one provided by `current_color`.
-    pub fn paint_point(&mut self, point: nalgebra_glm::Vec2) -> Result<(), PaintPointErrors> {
+    pub fn paint_point(&mut self, point: nalgebra_glm::Vec3) -> Result<(), PaintPointErrors> {
         let Framebuffer {
             width,
             height,
             buffer,
             current_color,
+            z_buffer,
             ..
         } = self;
         let x = point.x;
@@ -102,75 +114,12 @@ impl Framebuffer {
             (false, _) => Err(PaintPointErrors::XTooLarge),
             (_, false) => Err(PaintPointErrors::YTooLarge),
             _ => {
-                buffer[y * *width + x] = current_color.into();
+                let idx = y * *width + x;
+                if z_buffer[idx] < point.z {
+                    z_buffer[idx] = point.z;
+                    buffer[idx] = current_color.into();
+                }
                 Ok(())
-            }
-        }
-    }
-
-    /// Paints a line that extends from `p1` to `p2` with the color of `current_color`.
-    pub fn paint_line(
-        &mut self,
-        p1: nalgebra_glm::Vec2,
-        p2: nalgebra_glm::Vec2,
-    ) -> Result<(), PaintPointErrors> {
-        let x0 = p1.x;
-        let y0 = p1.y;
-
-        let x1 = p2.x;
-        let y1 = p2.y;
-
-        let delta_x = (x1 - x0).abs();
-        let delta_y = (y1 - y0).abs();
-
-        let dir_x = if x0 < x1 { 1.0 } else { -1.0 };
-        let dir_y = if y0 < y1 { 1.0 } else { -1.0 };
-
-        let mut err = delta_x - delta_y;
-
-        let mut current_x = x0;
-        let mut current_y = y0;
-
-        loop {
-            self.paint_point(Vec2::new(current_x, current_y))?;
-
-            let reached_x1 = equal(current_x, x1, f32::EPSILON);
-            let reached_y1 = equal(current_y, y1, f32::EPSILON);
-
-            if reached_x1 && reached_y1 {
-                break;
-            }
-
-            let e2 = 2.0 * err;
-
-            if e2 > -delta_y {
-                err -= delta_y;
-                current_x += dir_x;
-            }
-
-            if e2 < delta_x {
-                err += delta_x;
-                current_y += dir_y;
-            }
-        }
-
-        Ok(())
-    }
-
-    /// Paints the given polygon to the screen
-    pub fn paint_polygon(
-        &mut self,
-        mut points: Vec<nalgebra_glm::Vec2>,
-    ) -> Result<(), PaintPointErrors> {
-        match points.len() {
-            1 => self.paint_point(points.remove(0)),
-            _ => {
-                let a = points[0];
-                points.push(a);
-
-                points
-                    .windows(2)
-                    .try_for_each(|ps| self.paint_line(ps[0], ps[1]))
             }
         }
     }
