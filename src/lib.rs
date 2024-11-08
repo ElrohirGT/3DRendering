@@ -1,7 +1,7 @@
 use camera::Camera;
 use nalgebra_glm::Vec3;
 use obj::Obj;
-use render::Uniforms;
+use shader::Uniforms;
 use vertex::Vertex;
 
 pub mod bmp;

@@ -9,9 +9,10 @@ use three_d_rendering::color::Color;
 use three_d_rendering::framebuffer;
 use three_d_rendering::light::Light;
 use three_d_rendering::obj::Obj;
-use three_d_rendering::render::{
+use three_d_rendering::render::render;
+use three_d_rendering::shader::{
     create_model_matrix, create_projection_matrix, create_view_matrix, create_viewport_matrix,
-    render, Uniforms,
+    Uniforms,
 };
 use three_d_rendering::{Message, Model};
 

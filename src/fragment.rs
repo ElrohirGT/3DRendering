@@ -57,11 +57,12 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
-    let step_size = 5e-1;
+    let step_size = 10.0;
     let mut currenty = min.y;
     while currenty <= max.y {
         let mut currentx = min.x;
         while currentx <= max.x {
+            // println!("Rasterizing {currentx}, {currenty}");
             let mut point = Vec3::new(currentx, currenty, v1.position.z);
             let triangle_area = edge_function(&a, &b, &c);
             let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
