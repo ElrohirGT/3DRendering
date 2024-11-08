@@ -1,5 +1,6 @@
 use crate::{color::Color, vertex::Vertex};
 use nalgebra_glm::{dot, Vec2, Vec3};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
 pub struct Fragment {
     pub position: Vec3,
@@ -43,9 +44,9 @@ pub fn wireframe_triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment
         .collect()
 }
 
-pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
+pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) -> Vec<Fragment> {
     // let mut fragments = wireframe_triangle(v1, v2, v3);
-    let mut fragments = vec![];
+    // let mut fragments = vec![];
 
     let (a, b, c) = (
         v1.transformed_position,
@@ -57,37 +58,80 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
-    let step_size = 10.0;
-    let mut currenty = min.y;
-    while currenty <= max.y {
-        let mut currentx = min.x;
-        while currentx <= max.x {
-            // println!("Rasterizing {currentx}, {currenty}");
-            let mut point = Vec3::new(currentx, currenty, v1.position.z);
-            let triangle_area = edge_function(&a, &b, &c);
-            let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
+    let step_size = 5e-1;
+    let y_step_count = ((max.y - min.y) / step_size).ceil() as u32;
+    let x_step_count = ((max.x - min.x) / step_size).ceil() as u32;
 
-            // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
+    let fragments: Vec<Fragment> = (0..y_step_count)
+        .into_par_iter()
+        .flat_map(|y_idx| {
+            let currenty = min.y + step_size * (y_idx as f32);
 
-            if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w) {
-                point.z = u * a.z + v * b.z + w * c.z;
-                let normal = u * v1.transformed_normal
-                    + v * v2.transformed_normal
-                    + w * v3.transformed_normal;
-                // let normal = v1.transformed_normal;
-                let normal = normal.normalize();
-                let intensity = dot(&normal, &light_dir).max(0.0);
-                // println!("{normal:?} X {light_dir:?}");
+            (0..x_step_count).into_par_iter().filter_map(move |x_idx| {
+                let currentx = min.x + step_size * (x_idx as f32);
 
-                let base_color = Color::new(100, 100, 100);
-                let lit_color = base_color * intensity;
-                fragments.push(Fragment::new(point, lit_color));
-            }
+                let mut point = Vec3::new(currentx, currenty, v1.position.z);
+                let triangle_area = edge_function(&a, &b, &c);
+                let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
 
-            currentx += step_size;
-        }
-        currenty += step_size;
-    }
+                // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
+
+                if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w)
+                {
+                    point.z = u * a.z + v * b.z + w * c.z;
+                    let normal = u * v1.transformed_normal
+                        + v * v2.transformed_normal
+                        + w * v3.transformed_normal;
+                    let normal = normal.normalize();
+                    let camera_intensity = dot(&normal, camera_direction);
+                    if camera_intensity >= 0.0 {
+                        // If the camera is not looking at the fragment, don't compute it!
+                        return None;
+                    }
+
+                    let intensity = dot(&normal, &light_dir).max(0.0);
+
+                    let base_color = Color::new(100, 100, 100);
+                    let lit_color = base_color * intensity;
+
+                    Some(Fragment::new(point, lit_color))
+                } else {
+                    None
+                }
+            })
+        })
+        .collect();
+
+    // let mut currenty = min.y;
+    // while currenty <= max.y {
+    //     let mut currentx = min.x;
+    //     while currentx <= max.x {
+    //         // println!("Rasterizing {currentx}, {currenty}");
+    //         let mut point = Vec3::new(currentx, currenty, v1.position.z);
+    //         let triangle_area = edge_function(&a, &b, &c);
+    //         let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
+    //
+    //         // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
+    //
+    //         if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w) {
+    //             point.z = u * a.z + v * b.z + w * c.z;
+    //             let normal = u * v1.transformed_normal
+    //                 + v * v2.transformed_normal
+    //                 + w * v3.transformed_normal;
+    //             // let normal = v1.transformed_normal;
+    //             let normal = normal.normalize();
+    //             let intensity = dot(&normal, &light_dir).max(0.0);
+    //             // println!("{normal:?} X {light_dir:?}");
+    //
+    //             let base_color = Color::new(100, 100, 100);
+    //             let lit_color = base_color * intensity;
+    //             fragments.push(Fragment::new(point, lit_color));
+    //         }
+    //
+    //         currentx += step_size;
+    //     }
+    //     currenty += step_size;
+    // }
 
     fragments
 }

@@ -153,7 +153,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
         Vec3::new(0.0, 1.0, 0.0),
     );
 
-    let scale = 10.0;
+    let scale = 1.0;
     let rotation = Vec3::zeros();
     let translation = Vec3::new(0.0, 0.0, 0.0);
 

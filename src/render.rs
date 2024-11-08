@@ -30,9 +30,10 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
 
         // Rasterization
         println!("Applying rasterization...");
+        let camera_direction = data.camera.direction();
         let fragments: Vec<Fragment> = triangles
             .par_iter()
-            .flat_map(|tri| triangle(&tri[0], &tri[1], &tri[2]))
+            .flat_map(|tri| triangle(&tri[0], &tri[1], &tri[2], &camera_direction))
             .collect();
         println!("Rasterization applied!");
 
