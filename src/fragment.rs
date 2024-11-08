@@ -67,38 +67,42 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
         .flat_map(|y_idx| {
             let currenty = min.y + step_size * (y_idx as f32);
 
-            (0..x_step_count).into_par_iter().filter_map(move |x_idx| {
-                let currentx = min.x + step_size * (x_idx as f32);
+            (0..x_step_count)
+                .filter_map(move |x_idx| {
+                    let currentx = min.x + step_size * (x_idx as f32);
 
-                let mut point = Vec3::new(currentx, currenty, v1.position.z);
-                let triangle_area = edge_function(&a, &b, &c);
-                let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
+                    let mut point = Vec3::new(currentx, currenty, v1.position.z);
+                    let triangle_area = edge_function(&a, &b, &c);
+                    let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
 
-                // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
+                    // let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c);
 
-                if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w)
-                {
-                    point.z = u * a.z + v * b.z + w * c.z;
-                    let normal = u * v1.transformed_normal
-                        + v * v2.transformed_normal
-                        + w * v3.transformed_normal;
-                    let normal = normal.normalize();
-                    let camera_intensity = dot(&normal, camera_direction);
-                    if camera_intensity >= 0.0 {
-                        // If the camera is not looking at the fragment, don't compute it!
-                        return None;
+                    if (0.0..=1.0).contains(&u)
+                        && (0.0..=1.0).contains(&v)
+                        && (0.0..=1.0).contains(&w)
+                    {
+                        point.z = u * a.z + v * b.z + w * c.z;
+                        let normal = u * v1.transformed_normal
+                            + v * v2.transformed_normal
+                            + w * v3.transformed_normal;
+                        let normal = normal.normalize();
+                        let camera_intensity = dot(&normal, camera_direction);
+                        if camera_intensity >= 0.0 {
+                            // If the camera is not looking at the fragment, don't compute it!
+                            return None;
+                        }
+
+                        let intensity = dot(&normal, &light_dir).max(0.0);
+
+                        let base_color = Color::new(100, 100, 100);
+                        let lit_color = base_color * intensity;
+
+                        Some(Fragment::new(point, lit_color))
+                    } else {
+                        None
                     }
-
-                    let intensity = dot(&normal, &light_dir).max(0.0);
-
-                    let base_color = Color::new(100, 100, 100);
-                    let lit_color = base_color * intensity;
-
-                    Some(Fragment::new(point, lit_color))
-                } else {
-                    None
-                }
-            })
+                })
+                .collect::<Vec<Fragment>>()
         })
         .collect();
 
