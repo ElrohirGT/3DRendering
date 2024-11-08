@@ -18,11 +18,11 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     } = data;
 
     for obj in objs {
-        let vertex_array = obj.get_vertex_array();
+        let vertex_array = obj;
 
         // Vertex Shader
         println!("Applying shaders...");
-        let new_vertices = apply_shaders(&vertex_array, uniforms);
+        let new_vertices = apply_shaders(vertex_array, uniforms);
         println!("Vertex shader applied!");
 
         // Primitive assembly

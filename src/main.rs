@@ -5,10 +5,8 @@ use std::collections::VecDeque;
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
 use three_d_rendering::camera::Camera;
-use three_d_rendering::color::Color;
 use three_d_rendering::framebuffer;
-use three_d_rendering::light::Light;
-use three_d_rendering::obj::Obj;
+use three_d_rendering::obj::load_objs;
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
     create_model_matrix, create_projection_matrix, create_view_matrix, create_viewport_matrix,
@@ -145,7 +143,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let obj = Obj::load("Ship.obj").unwrap();
+    let obj = load_objs("Ship.obj").unwrap();
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
