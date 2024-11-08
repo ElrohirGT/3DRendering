@@ -55,7 +55,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex) -> Vec<Fragment> {
 
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
-    let light_dir = Vec3::new(0.0, 0.0, 5.0).normalize();
+    let light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
 
     let step_size = 5e-1;
     let mut currenty = min.y;

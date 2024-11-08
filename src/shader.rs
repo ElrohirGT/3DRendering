@@ -4,7 +4,11 @@ use crate::{render::Uniforms, vertex::Vertex};
 
 pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
     let position = Vec4::new(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
-    let transformed = uniforms.model_matrix * position;
+    let transformed = uniforms.viewport_matrix
+        * uniforms.projection_matrix
+        * uniforms.view_matrix
+        * uniforms.model_matrix
+        * position;
     // println!("{position:?} TURNED INTO {transformed:?}");
 
     let w = transformed.w;

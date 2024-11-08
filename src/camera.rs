@@ -30,15 +30,6 @@ impl Camera {
             has_changed: true,
         }
     }
-    pub fn change_basis(&self, vector: &Vec3) -> Vec3 {
-        let forward = (self.center - self.eye).normalize();
-        let right = forward.cross(&self.up).normalize();
-        let up = right.cross(&forward).normalize();
-
-        let changed_based = vector.x * right + vector.y * up - vector.z * forward;
-
-        changed_based.normalize()
-    }
 
     /// Advances the Camera by a given delta.
     pub fn zoom_cam(&mut self, delta: f32) {
