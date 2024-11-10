@@ -44,7 +44,7 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
 
 fn apply_shaders(vertices: &[Vertex], uniforms: &Uniforms) -> Vec<Vertex> {
     vertices
-        .par_iter()
+        .iter()
         .map(|v| vertex_shader(v, uniforms))
         .collect()
 }
@@ -55,7 +55,7 @@ fn assembly(vertices: &[Vertex]) -> Vec<&[Vertex]> {
 
 fn rasterize(triangles: Vec<&[Vertex]>, camera_direction: &Vec3) -> Vec<Fragment> {
     triangles
-        .par_iter()
+        .iter()
         .flat_map(|tri| triangle(&tri[0], &tri[1], &tri[2], camera_direction))
         .collect()
 }
