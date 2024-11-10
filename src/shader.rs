@@ -12,12 +12,15 @@ pub struct Uniforms {
 }
 
 pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
+    let Uniforms {
+        model_matrix,
+        view_matrix,
+        projection_matrix,
+        viewport_matrix,
+    } = uniforms;
+
     let position = vec4(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
-    let transformed = uniforms.viewport_matrix
-        * uniforms.projection_matrix
-        * uniforms.view_matrix
-        * uniforms.model_matrix
-        * position;
+    let transformed = viewport_matrix * projection_matrix * view_matrix * model_matrix * position;
     // println!("{position:?} TURNED INTO {transformed:?}");
 
     let w = transformed.w;
