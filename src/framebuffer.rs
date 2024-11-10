@@ -87,7 +87,11 @@ impl Framebuffer {
     /// The paint origin is located on the top left corner of the window.
     ///
     /// The color used is the one provided by `current_color`.
-    pub fn paint_point(&mut self, point: nalgebra_glm::Vec3) -> Result<(), PaintPointErrors> {
+    pub fn paint_point(
+        &mut self,
+        point: nalgebra_glm::Vec2,
+        depth: f32,
+    ) -> Result<(), PaintPointErrors> {
         let Framebuffer {
             width,
             height,
@@ -115,8 +119,8 @@ impl Framebuffer {
             (_, false) => Err(PaintPointErrors::YTooLarge),
             _ => {
                 let idx = y * *width + x;
-                if z_buffer[idx] < point.z {
-                    z_buffer[idx] = point.z;
+                if z_buffer[idx] < depth {
+                    z_buffer[idx] = depth;
                     buffer[idx] = current_color.into();
                 }
                 Ok(())

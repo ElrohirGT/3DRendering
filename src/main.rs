@@ -1,6 +1,6 @@
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use mouse_rs::Mouse;
-use nalgebra_glm::Vec3;
+use nalgebra_glm::{vec3, Vec3};
 use std::collections::VecDeque;
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
@@ -21,14 +21,18 @@ fn main() {
     let window_width = 1080;
     let window_height = 720;
 
-    let framebuffer_width = 1080;
-    let framebuffer_height = 720;
+    let framebuffer_width = 1000;
+    let framebuffer_height =
+        (window_height as f32 / window_width as f32) * framebuffer_width as f32;
+    let framebuffer_height = framebuffer_height as usize;
+
+    println!("Framebuffer: ({framebuffer_width}, {framebuffer_height})");
 
     let mut framebuffer = framebuffer::Framebuffer::new(framebuffer_width, framebuffer_height);
 
     let window_options = WindowOptions {
-        resize: true,
-        scale: minifb::Scale::FitScreen,
+        // resize: true,
+        // scale: minifb::Scale::FitScreen,
         ..WindowOptions::default()
     };
 
@@ -143,7 +147,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let obj = load_objs("cube.obj").unwrap();
+    let obj = load_objs("sphere.obj").unwrap();
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
@@ -153,7 +157,8 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let scale = 1.0;
     let rotation = Vec3::zeros();
-    let translation = Vec3::new(0.0, 0.0, 0.0);
+    // let translation = Vec3::zeros();
+    let translation = vec3(0.0, 0.0, 0.0);
 
     Model {
         objs: obj,

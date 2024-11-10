@@ -70,6 +70,6 @@ fn rasterize(triangles: Vec<&[Vertex]>, camera_direction: &Vec3) -> Vec<Fragment
 fn paint_fragments(fragments: Vec<Fragment>, framebuffer: &mut Framebuffer) {
     for fragment in fragments {
         framebuffer.set_current_color(fragment.color);
-        let _ = framebuffer.paint_point(fragment.position);
+        let _ = framebuffer.paint_point(fragment.position, fragment.depth);
     }
 }
