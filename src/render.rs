@@ -4,7 +4,7 @@ use rayon::prelude::*;
 use crate::{
     fragment::{triangle, Fragment},
     framebuffer::Framebuffer,
-    shader::{vertex_shader, Uniforms},
+    shader::{fragment_shader, vertex_shader, Uniforms},
     vertex::Vertex,
     Model,
 };
@@ -34,6 +34,13 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
         println!("Applying rasterization...");
         let fragments = rasterize(triangles, &camera.direction());
         println!("Rasterization applied!");
+
+        println!("Applying fragment shaders...");
+        let fragments = fragments
+            .into_iter()
+            .map(|f| fragment_shader(f, uniforms))
+            .collect();
+        println!("Fragment shaders applied!");
 
         // Fragment Processing
         println!("Painting fragments...");

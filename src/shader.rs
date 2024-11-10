@@ -2,7 +2,7 @@ use core::f32;
 
 use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
 
-use crate::vertex::Vertex;
+use crate::{fragment::Fragment, vertex::Vertex};
 
 pub struct Uniforms {
     pub model_matrix: Mat4,
@@ -18,7 +18,7 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
         * uniforms.view_matrix
         * uniforms.model_matrix
         * position;
-    println!("{position:?} TURNED INTO {transformed:?}");
+    // println!("{position:?} TURNED INTO {transformed:?}");
 
     let w = transformed.w;
     let transformed_position = vec3(transformed.x / w, transformed.y / w, transformed.z / w);
@@ -46,6 +46,16 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
         tex_coords: vertex.tex_coords,
         color: vertex.color,
     }
+}
+
+pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+    let Fragment {
+        color, intensity, ..
+    } = fragment;
+
+    let color = color * intensity;
+
+    Fragment { color, ..fragment }
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {

@@ -4,11 +4,24 @@ use nalgebra_glm::{dot, Vec2, Vec3};
 pub struct Fragment {
     pub position: Vec3,
     pub color: Color,
+    pub intensity: f32,
 }
 
 impl Fragment {
     pub fn new(position: Vec3, color: Color) -> Self {
-        Fragment { position, color }
+        Fragment {
+            position,
+            color,
+            intensity: 1.0,
+        }
+    }
+
+    pub fn new_with_intensity(position: Vec3, color: Color, intensity: f32) -> Self {
+        Fragment {
+            position,
+            color,
+            intensity,
+        }
     }
 }
 
@@ -52,7 +65,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
     let triangle_area = edge_function(&a, &b, &c);
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
-    let light_dir = Vec3::new(0.0, 0.0, 1.0).normalize();
+    let light_dir = Vec3::new(0.0, 0.0, -1.0).normalize();
     let base_color = Color::new(100, 100, 100);
 
     let step_size = 5e-1;
@@ -80,10 +93,12 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
                     //     return None;
                     // }
 
-                    let intensity = dot(&normal, &light_dir).max(0.0);
-                    let lit_color = base_color * intensity;
+                    let intensity = dot(&light_dir, &normal).clamp(0.0, 1.0);
+                    // if intensity <= 0.0 {
+                    //     println!("The intensity is {intensity}! {light_dir:?} dot {normal:?}");
+                    // }
 
-                    Some(Fragment::new(point, lit_color))
+                    Some(Fragment::new_with_intensity(point, base_color, intensity))
                 } else {
                     None
                 }
