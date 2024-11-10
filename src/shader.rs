@@ -1,6 +1,6 @@
 use core::f32;
 
-use nalgebra_glm::{vec3, vec4, Mat3, Mat4, Vec3, Vec4};
+use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
 
 use crate::vertex::Vertex;
 
@@ -53,38 +53,41 @@ pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat
     let (siny, cosy) = rotation.y.sin_cos();
     let (sinz, cosz) = rotation.z.sin_cos();
 
+    #[rustfmt::skip]
     let rotation_x = Mat4::new(
-        1.0, 0.0, 0.0, 0.0, 0.0, cosx, -sinx, 0.0, 0.0, sinx, cosx, 0.0, 0.0, 0.0, 0.0, 1.0,
+        1.0,    0.0,    0.0,    0.0,
+        0.0,    cosx,   -sinx,  0.0,
+        0.0,    sinx,   cosx,   0.0,
+        0.0,    0.0,    0.0,    1.0,
     );
 
+    #[rustfmt::skip]
     let rotation_y = Mat4::new(
-        cosy, 0.0, siny, 0.0, 0.0, 1.0, 0.0, 0.0, -siny, 0.0, cosy, 0.0, 0.0, 0.0, 0.0, 1.0,
+        cosy,   0.0,    siny,   0.0,
+        0.0,    1.0,    0.0,    0.0,
+        -siny,  0.0,    cosy,   0.0,
+        0.0,    0.0,    0.0,    1.0,
     );
 
+    #[rustfmt::skip]
     let rotation_z = Mat4::new(
-        cosz, -sinz, 0.0, 0.0, sinz, cosz, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        cosz,   -sinz,  0.0,    0.0,
+        sinz,   cosz,   0.0,    0.0,
+        0.0,    0.0,    1.0,    0.0,
+        0.0,    0.0,    0.0,    1.0,
     );
 
     let rotation_matrix = rotation_z * rotation_y * rotation_x;
 
-    Mat4::new(
-        scale,
-        0.0,
-        0.0,
-        translation.x,
-        0.0,
-        scale,
-        0.0,
-        translation.y,
-        0.0,
-        0.0,
-        scale,
-        translation.z,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-    ) * rotation_matrix
+    #[rustfmt::skip]
+    let matrix = Mat4::new(
+        scale,  0.0,    0.0,    translation.x,
+        0.0,    scale,  0.0,    translation.y,
+        0.0,    0.0,    scale,  translation.z,
+        0.0,    0.0,    0.0,    1.0,
+    ) * rotation_matrix;
+
+    matrix
 }
 
 pub fn create_view_matrix(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
@@ -101,22 +104,12 @@ pub fn create_projection_matrix(window_width: f32, window_height: f32) -> Mat4 {
 }
 
 pub fn create_viewport_matrix(framebuffer_width: f32, framebuffer_height: f32) -> Mat4 {
-    Mat4::new(
-        framebuffer_width / 2.0,
-        0.0,
-        0.0,
-        framebuffer_width / 2.0,
-        0.0,
-        -framebuffer_height / 2.0,
-        0.0,
-        framebuffer_height / 2.0,
-        0.0,
-        0.0,
-        1.0,
-        0.0,
-        0.0,
-        0.0,
-        0.0,
-        1.0,
-    )
+    #[rustfmt::skip]
+    let matrix = Mat4::new(
+        framebuffer_width / 2.0,    0.0,                        0.0,    framebuffer_width / 2.0,
+        0.0,                        -framebuffer_height / 2.0,  0.0,    framebuffer_height / 2.0,
+        0.0,                        0.0,                        1.0,    0.0,
+        0.0,                        0.0,                        0.0,    1.0);
+
+    matrix
 }
