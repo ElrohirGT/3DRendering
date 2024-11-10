@@ -14,7 +14,7 @@ use three_d_rendering::shader::{
 };
 use three_d_rendering::{Message, Model};
 
-const ZOOM_SPEED: f32 = 5.0;
+const ZOOM_SPEED: f32 = 1.0;
 const ROTATION_SPEED: f32 = PI / 20.0;
 
 fn main() {
@@ -143,7 +143,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let obj = load_objs("Ship.obj").unwrap();
+    let obj = load_objs("sphere.obj").unwrap();
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
