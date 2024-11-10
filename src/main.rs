@@ -188,7 +188,7 @@ fn update(data: Model, msg: Message) -> Model {
                 ..
             } = data;
 
-            camera.rotate_cam(delta_yaw, delta_pitch);
+            camera.orbit(delta_yaw, delta_pitch);
             let uniforms = Uniforms {
                 view_matrix: create_view_matrix(camera.eye, camera.center, camera.up),
                 ..uniforms
