@@ -24,21 +24,6 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
     let transformed_position = vec3(transformed.x / w, transformed.y / w, transformed.z / w);
 
     // Transform normal
-    // let model_mat3 = Mat3::new(
-    //     uniforms.model_matrix[0],
-    //     uniforms.model_matrix[1],
-    //     uniforms.model_matrix[2],
-    //     uniforms.model_matrix[4],
-    //     uniforms.model_matrix[5],
-    //     uniforms.model_matrix[6],
-    //     uniforms.model_matrix[8],
-    //     uniforms.model_matrix[9],
-    //     uniforms.model_matrix[10],
-    // );
-    // let normal_matrix = model_mat3
-    //     .try_inverse()
-    //     .unwrap_or(Mat3::identity())
-    //     .transpose();
     let vertex_normal = vec4(vertex.normal.x, vertex.normal.y, vertex.normal.z, 1.0);
     let normal_matrix = uniforms
         .model_matrix
@@ -46,17 +31,18 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
         .unwrap_or(Mat4::identity())
         .transpose();
     let transformed_normal = normal_matrix * vertex_normal;
+    let w = transformed_normal.w;
+    let transformed_normal = vec3(
+        transformed_normal.x / w,
+        transformed_normal.y / w,
+        transformed_normal.z / w,
+    );
     // let transformed_normal = vertex.normal;
     // println!("{normal_matrix:?} -> {transformed_normal:?}");
 
-    let w = transformed_normal.w;
     Vertex {
         position: transformed_position,
-        normal: vec3(
-            transformed_normal.x / w,
-            transformed_normal.y / w,
-            transformed_normal.z / w,
-        ),
+        normal: transformed_normal,
         tex_coords: vertex.tex_coords,
         color: vertex.color,
     }
