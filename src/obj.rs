@@ -38,9 +38,7 @@ pub fn load_objs(filename: &str) -> Result<Vec<Obj>, tobj::LoadError> {
                 .collect();
 
             let indices: Vec<usize> = mesh.indices.iter().map(|idx| *idx as usize).collect();
-            let vertex_array = get_vertex_array(indices, vertices, normals, texcoords);
-
-            vertex_array
+            get_vertex_array(indices, vertices, normals, texcoords)
         })
         .collect();
 

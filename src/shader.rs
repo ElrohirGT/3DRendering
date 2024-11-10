@@ -1,6 +1,6 @@
 use core::f32;
 
-use nalgebra_glm::{Mat3, Mat4, Vec3, Vec4};
+use nalgebra_glm::{vec3, vec4, Mat3, Mat4, Vec3, Vec4};
 
 use crate::vertex::Vertex;
 
@@ -12,39 +12,51 @@ pub struct Uniforms {
 }
 
 pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
-    let position = Vec4::new(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
+    let position = vec4(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
     let transformed = uniforms.viewport_matrix
         * uniforms.projection_matrix
         * uniforms.view_matrix
         * uniforms.model_matrix
         * position;
-    // println!("{position:?} TURNED INTO {transformed:?}");
+    println!("{position:?} TURNED INTO {transformed:?}");
 
     let w = transformed.w;
-    let transformed_position = Vec3::new(transformed.x / w, transformed.y / w, transformed.z / w);
+    let transformed_position = vec3(transformed.x / w, transformed.y / w, transformed.z / w);
 
     // Transform normal
-    let model_mat3 = Mat3::new(
-        uniforms.model_matrix[0],
-        uniforms.model_matrix[1],
-        uniforms.model_matrix[2],
-        uniforms.model_matrix[4],
-        uniforms.model_matrix[5],
-        uniforms.model_matrix[6],
-        uniforms.model_matrix[8],
-        uniforms.model_matrix[9],
-        uniforms.model_matrix[10],
-    );
-    let normal_matrix = model_mat3
-        .transpose()
+    // let model_mat3 = Mat3::new(
+    //     uniforms.model_matrix[0],
+    //     uniforms.model_matrix[1],
+    //     uniforms.model_matrix[2],
+    //     uniforms.model_matrix[4],
+    //     uniforms.model_matrix[5],
+    //     uniforms.model_matrix[6],
+    //     uniforms.model_matrix[8],
+    //     uniforms.model_matrix[9],
+    //     uniforms.model_matrix[10],
+    // );
+    // let normal_matrix = model_mat3
+    //     .try_inverse()
+    //     .unwrap_or(Mat3::identity())
+    //     .transpose();
+    let vertex_normal = vec4(vertex.normal.x, vertex.normal.y, vertex.normal.z, 1.0);
+    let normal_matrix = uniforms
+        .model_matrix
         .try_inverse()
-        .unwrap_or(Mat3::identity());
-    let transformed_normal = normal_matrix * vertex.normal;
+        .unwrap_or(Mat4::identity())
+        .transpose();
+    let transformed_normal = normal_matrix * vertex_normal;
+    // let transformed_normal = vertex.normal;
     // println!("{normal_matrix:?} -> {transformed_normal:?}");
 
+    let w = transformed_normal.w;
     Vertex {
         position: transformed_position,
-        normal: transformed_normal,
+        normal: vec3(
+            transformed_normal.x / w,
+            transformed_normal.y / w,
+            transformed_normal.z / w,
+        ),
         tex_coords: vertex.tex_coords,
         color: vertex.color,
     }

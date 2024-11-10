@@ -143,7 +143,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let obj = load_objs("sphere.obj").unwrap();
+    let obj = load_objs("cube.obj").unwrap();
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
