@@ -14,6 +14,7 @@ pub mod framebuffer;
 pub mod light;
 pub mod material;
 pub mod obj;
+pub mod planets;
 pub mod render;
 pub mod shader;
 pub mod vertex;
@@ -26,6 +27,7 @@ pub enum Message {
     RotateCamera(f32, f32),
     ZoomCamera(f32),
     UpdateTime(f32),
+    ChangePlanet(Entity),
 }
 
 pub type EntityShader = (ShaderType, Vec<Color>, BlendMode);

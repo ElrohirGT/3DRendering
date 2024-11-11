@@ -8,6 +8,7 @@ use three_d_rendering::blenders::BlendMode;
 use three_d_rendering::camera::Camera;
 use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
+use three_d_rendering::planets::{create_disco_planet, create_star_planet};
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
     create_model_matrix, create_projection_matrix, create_view_matrix, create_viewport_matrix,
@@ -86,6 +87,9 @@ fn main() {
                 Key::W => Some(Message::ZoomCamera(ZOOM_SPEED)),
                 Key::S => Some(Message::ZoomCamera(-ZOOM_SPEED)),
 
+                Key::Key1 => Some(Message::ChangePlanet(create_disco_planet())),
+                Key::Key2 => Some(Message::ChangePlanet(create_star_planet())),
+
                 // Key::Tab => {
                 //     should_update = true;
                 //     Some(match data.daytime {
@@ -144,43 +148,16 @@ fn main() {
     }
 }
 
-fn create_disco_planet() -> Entity {
-    let planet_obj = load_objs("sphere.obj").unwrap();
-    let shaders = vec![
-        (
-            ShaderType::MovingStripes {
-                speed: 1e-3,
-                stripe_width: 0.1,
-            },
-            vec![Color::pink(), Color::green()],
-            BlendMode::Replace,
-        ),
-        (
-            ShaderType::MovingStripes {
-                speed: 1e-4,
-                stripe_width: 0.1,
-            },
-            vec![Color::black(), Color::blue()],
-            BlendMode::Normal,
-        ),
-        (ShaderType::Intensity, vec![], BlendMode::Replace),
-    ];
-
-    Entity {
-        objs: planet_obj,
-        shaders,
-    }
-}
-
 /// Init the default state
 fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize)) -> Model {
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
 
     let disco_planet = create_disco_planet();
+    let star_planet = create_star_planet();
 
     let render_entities = vec![disco_planet];
-    let entities = vec![];
+    let entities = vec![star_planet];
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
@@ -263,6 +240,14 @@ fn update(data: Model, msg: Message) -> Model {
             let uniforms = Uniforms { time, ..uniforms };
 
             Model { uniforms, ..data }
+        }
+        Message::ChangePlanet(entity) => {
+            let render_entities = vec![entity];
+
+            Model {
+                render_entities,
+                ..data
+            }
         }
     }
 }
