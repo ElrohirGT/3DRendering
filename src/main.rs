@@ -174,7 +174,8 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     ];
     let planet = Entity { objs, shaders };
 
-    let entities = vec![planet];
+    let render_entities = vec![planet];
+    let entities = vec![];
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
@@ -189,6 +190,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     Model {
         entities,
+        render_entities,
         uniforms: Uniforms {
             model_matrix: create_model_matrix(translation, scale, rotation),
             view_matrix: create_view_matrix(camera.eye, camera.center, camera.up),
@@ -199,9 +201,9 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
             ),
             time: 0.0,
         },
-        scale,
         rotation,
         translation,
+        scale,
         camera,
     }
 }

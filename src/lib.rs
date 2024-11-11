@@ -35,6 +35,7 @@ pub struct Entity {
 
 pub struct Model {
     pub entities: Vec<Entity>,
+    pub render_entities: Vec<Entity>,
     pub uniforms: Uniforms,
     pub rotation: Vec3,
     pub translation: Vec3,

@@ -11,42 +11,42 @@ use crate::{
 
 pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     let Model {
-        entities,
+        render_entities,
         uniforms,
         camera,
         ..
     } = data;
 
-    for entity in entities {
+    for entity in render_entities {
         let Entity { objs, shaders } = entity;
 
         for vertex_array in objs {
             // Vertex Shader
-            println!("Applying shaders...");
+            // println!("Applying shaders...");
             let new_vertices = apply_shaders(vertex_array, uniforms);
-            println!("Vertex shader applied!");
+            // println!("Vertex shader applied!");
 
             // Primitive assembly
-            println!("Assembly...");
+            // println!("Assembly...");
             let triangles = assembly(&new_vertices);
-            println!("Assembly done!");
+            // println!("Assembly done!");
 
             // Rasterization
-            println!("Applying rasterization...");
+            // println!("Applying rasterization...");
             let fragments = rasterize(triangles, &camera.direction());
-            println!("Rasterization applied!");
+            // println!("Rasterization applied!");
 
-            println!("Applying fragment shaders...");
+            // println!("Applying fragment shaders...");
             let fragments = fragments
                 .into_iter()
                 .map(|f| fragment_shader(f, shaders, uniforms))
                 .collect();
-            println!("Fragment shaders applied!");
+            // println!("Fragment shaders applied!");
 
             // Fragment Processing
-            println!("Painting fragments...");
+            // println!("Painting fragments...");
             paint_fragments(fragments, framebuffer);
-            println!("Fragments painted!");
+            // println!("Fragments painted!");
         }
     }
 }
