@@ -54,8 +54,9 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 
 pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     fragment
-        .apply(uniforms, stripes_shader)
-        .apply(uniforms, intensity_shader)
+        // .apply(uniforms, stripes_shader)
+        .apply(uniforms, interesting_shader)
+    // .apply(uniforms, intensity_shader)
 }
 
 fn intensity_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
