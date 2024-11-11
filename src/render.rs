@@ -1,4 +1,4 @@
-use nalgebra_glm::Vec3;
+use nalgebra_glm::{Mat4, Vec3};
 use rayon::prelude::*;
 
 use crate::{
@@ -18,12 +18,16 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     } = data;
 
     for entity in render_entities {
-        let Entity { objs, shaders } = entity;
+        let Entity {
+            objs,
+            shaders,
+            model_matrix,
+        } = entity;
 
         for vertex_array in objs {
             // Vertex Shader
             // println!("Applying shaders...");
-            let new_vertices = apply_shaders(vertex_array, uniforms);
+            let new_vertices = apply_shaders(vertex_array, uniforms, model_matrix);
             // println!("Vertex shader applied!");
 
             // Primitive assembly
@@ -51,10 +55,10 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     }
 }
 
-fn apply_shaders(vertices: &[Vertex], uniforms: &Uniforms) -> Vec<Vertex> {
+fn apply_shaders(vertices: &[Vertex], uniforms: &Uniforms, model_matrix: &Mat4) -> Vec<Vertex> {
     vertices
         .iter()
-        .map(|v| vertex_shader(v, uniforms))
+        .map(|v| vertex_shader(v, uniforms, model_matrix))
         .collect()
 }
 

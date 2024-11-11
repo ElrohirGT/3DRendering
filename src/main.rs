@@ -8,11 +8,11 @@ use three_d_rendering::blenders::BlendMode;
 use three_d_rendering::camera::Camera;
 use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
-use three_d_rendering::planets::{create_disco_planet, create_star_planet};
+use three_d_rendering::planets::{create_disco_planet, create_ocean_planet};
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
-    create_model_matrix, create_projection_matrix, create_view_matrix, create_viewport_matrix,
-    ShaderType, Uniforms,
+    create_model_matrix, create_noise, create_projection_matrix, create_view_matrix,
+    create_viewport_matrix, ShaderType, Uniforms,
 };
 use three_d_rendering::{framebuffer, Entity};
 use three_d_rendering::{Message, Model};
@@ -88,7 +88,7 @@ fn main() {
                 Key::S => Some(Message::ZoomCamera(-ZOOM_SPEED)),
 
                 Key::Key1 => Some(Message::ChangePlanet(create_disco_planet())),
-                Key::Key2 => Some(Message::ChangePlanet(create_star_planet())),
+                Key::Key2 => Some(Message::ChangePlanet(create_ocean_planet())),
 
                 // Key::Tab => {
                 //     should_update = true;
@@ -154,7 +154,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     let (window_width, window_height) = window_dimensions;
 
     let disco_planet = create_disco_planet();
-    let star_planet = create_star_planet();
+    let star_planet = create_ocean_planet();
 
     let render_entities = vec![disco_planet];
     let entities = vec![star_planet];
@@ -174,7 +174,6 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
         entities,
         render_entities,
         uniforms: Uniforms {
-            model_matrix: create_model_matrix(translation, scale, rotation),
             view_matrix: create_view_matrix(camera.eye, camera.center, camera.up),
             projection_matrix: create_projection_matrix(window_width as f32, window_height as f32),
             viewport_matrix: create_viewport_matrix(
@@ -182,6 +181,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
                 framebuffer_height as f32,
             ),
             time: 0.0,
+            noise: create_noise(),
         },
         rotation,
         translation,

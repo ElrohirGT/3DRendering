@@ -1,8 +1,9 @@
 use std::f32::consts::PI;
 
-use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
+use fastnoise_lite::FastNoiseLite;
+use nalgebra_glm::{vec2, vec3, vec4, Mat4, Vec3};
 
-use crate::{color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
+use crate::{clamp_with_universe, color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
 
 pub enum ShaderType {
     Stripe {
@@ -21,19 +22,30 @@ pub enum ShaderType {
     AliveCheckerboard,
     Intensity,
     BaseColor,
+    CloudShader,
 }
 
 pub struct Uniforms {
-    pub model_matrix: Mat4,
     pub view_matrix: Mat4,
     pub projection_matrix: Mat4,
     pub viewport_matrix: Mat4,
     pub time: f32,
+    pub noise: FastNoiseLite,
 }
 
-pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
+pub fn create_noise() -> FastNoiseLite {
+    let mut noise = FastNoiseLite::with_seed(7082003);
+
+    noise.set_frequency(Some(4e-3));
+    noise.set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
+    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
+    noise.set_fractal_lacunarity(Some(0.530));
+
+    noise
+}
+
+pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms, model_matrix: &Mat4) -> Vertex {
     let Uniforms {
-        model_matrix,
         view_matrix,
         projection_matrix,
         viewport_matrix,
@@ -49,8 +61,7 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 
     // Transform normal
     let vertex_normal = vec4(vertex.normal.x, vertex.normal.y, vertex.normal.z, 1.0);
-    let normal_matrix = uniforms
-        .model_matrix
+    let normal_matrix = model_matrix
         .try_inverse()
         .unwrap_or(Mat4::identity())
         .transpose();
@@ -95,6 +106,7 @@ pub fn fragment_shader(
                 red,
                 blue,
             } => glowing_shader(&fragment, stripe_width, glow_size, red, blue),
+            ShaderType::CloudShader => cloud_shader(&fragment, uniforms),
         };
 
         acc.blend(&color, &current.2)
@@ -150,13 +162,11 @@ fn glowing_shader(
     let distance_to_center = (y % stripe_width - stripe_width / 2.0).abs();
     let glow_intensity = ((1.0 - (distance_to_center / glow_size).min(1.0)) * PI / 2.0).sin();
 
-    let color = Color::new(
+    Color::new(
         (red * glow_intensity * 255.0) as u8,
         (blue * glow_intensity * 255.0) as u8,
         (glow_intensity * 255.0) as u8,
-    );
-
-    color
+    )
 }
 
 fn moving_stripes(
@@ -172,9 +182,23 @@ fn moving_stripes(
     let moving_y = fragment.vertex_position.y + uniforms.time * speed;
 
     let stripe_factor = ((moving_y / stripe_width) * PI).sin() * 0.5 + 0.5;
-    let color = color1.lerp(&color2, stripe_factor);
+    color1.lerp(&color2, stripe_factor)
+}
 
-    color
+fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
+    let Uniforms { time, noise, .. } = uniforms;
+
+    // let zoom = 100.0;
+    let zoom = 400.0;
+    let speed = 8e-3;
+
+    let x = fragment.vertex_position.x * zoom + speed * time;
+    let y = fragment.vertex_position.y * zoom;
+
+    let noise_value = noise.get_noise_2d(x, y);
+    let intensity = clamp_with_universe(vec2(-1.0, 1.0), vec2(0.0, 1.0), noise_value);
+
+    Color::white() * intensity
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
