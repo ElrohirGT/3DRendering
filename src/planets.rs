@@ -53,9 +53,52 @@ pub fn create_ocean_planet() -> Entity {
             BlendMode::Replace,
         ),
         (
-            ShaderType::CloudShader,
-            vec![Color::black(), Color::green()],
+            ShaderType::FBmShader {
+                zoom: 600.0,
+                speed: 4e-2,
+                octaves: 4,
+                lacunarity: 2.0,
+                gain: 0.8,
+                weighted_strength: 0.0,
+            },
+            vec![Color::new(230, 230, 230)],
             BlendMode::Screen,
+        ),
+        (ShaderType::Intensity, vec![], BlendMode::Replace),
+    ];
+
+    Entity {
+        objs: planet_obj,
+        model_matrix: create_default_planet_model_matrix(),
+        shaders,
+    }
+}
+
+pub fn create_gas_giant() -> Entity {
+    let planet_obj = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (
+            ShaderType::BaseColor,
+            vec![0xc2e9ed.into()],
+            BlendMode::Replace,
+        ),
+        (ShaderType::Intensity, vec![], BlendMode::Replace),
+    ];
+
+    Entity {
+        objs: planet_obj,
+        model_matrix: create_default_planet_model_matrix(),
+        shaders,
+    }
+}
+
+pub fn create_robot_planet() -> Entity {
+    let planet_obj = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (
+            ShaderType::BaseColor,
+            vec![0xc2e9ed.into()],
+            BlendMode::Replace,
         ),
         (ShaderType::Intensity, vec![], BlendMode::Replace),
     ];

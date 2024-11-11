@@ -22,7 +22,14 @@ pub enum ShaderType {
     AliveCheckerboard,
     Intensity,
     BaseColor,
-    CloudShader,
+    FBmShader {
+        zoom: f32,
+        speed: f32,
+        octaves: i32,
+        lacunarity: f32,
+        gain: f32,
+        weighted_strength: f32,
+    },
 }
 
 pub struct Uniforms {
@@ -30,15 +37,11 @@ pub struct Uniforms {
     pub projection_matrix: Mat4,
     pub viewport_matrix: Mat4,
     pub time: f32,
-    pub noise: FastNoiseLite,
 }
 
 pub fn create_noise() -> FastNoiseLite {
     let mut noise = FastNoiseLite::with_seed(7082003);
 
-    noise.set_frequency(Some(4e-3));
-    noise.set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
-    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
     noise.set_fractal_lacunarity(Some(0.530));
 
     noise
@@ -87,6 +90,7 @@ pub fn fragment_shader(
     fragment: Fragment,
     inputs: &[EntityShader],
     uniforms: &Uniforms,
+    noise: &mut FastNoiseLite,
 ) -> Fragment {
     let color = inputs.iter().fold(fragment.color, |acc, current| {
         let color = match current.0 {
@@ -106,7 +110,25 @@ pub fn fragment_shader(
                 red,
                 blue,
             } => glowing_shader(&fragment, stripe_width, glow_size, red, blue),
-            ShaderType::CloudShader => cloud_shader(&fragment, uniforms),
+            ShaderType::FBmShader {
+                zoom,
+                speed,
+                lacunarity,
+                octaves,
+                gain,
+                weighted_strength,
+            } => fbm_shader(
+                &fragment,
+                uniforms,
+                &current.1,
+                speed,
+                zoom,
+                octaves,
+                gain,
+                weighted_strength,
+                lacunarity,
+                noise,
+            ),
         };
 
         acc.blend(&color, &current.2)
@@ -185,20 +207,34 @@ fn moving_stripes(
     color1.lerp(&color2, stripe_factor)
 }
 
-fn cloud_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
-    let Uniforms { time, noise, .. } = uniforms;
-
-    // let zoom = 100.0;
-    let zoom = 400.0;
-    let speed = 8e-3;
+fn fbm_shader(
+    fragment: &Fragment,
+    uniforms: &Uniforms,
+    colors: &[Color],
+    speed: f32,
+    zoom: f32,
+    octaves: i32,
+    gain: f32,
+    weighted_strength: f32,
+    lacunarity: f32,
+    noise: &mut FastNoiseLite,
+) -> Color {
+    let Uniforms { time, .. } = uniforms;
 
     let x = fragment.vertex_position.x * zoom + speed * time;
     let y = fragment.vertex_position.y * zoom;
 
+    noise.set_fractal_octaves(Some(octaves));
+    noise.set_fractal_gain(Some(gain));
+    noise.set_fractal_weighted_strength(Some(weighted_strength));
+    noise.set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
+    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
+    noise.set_fractal_lacunarity(Some(lacunarity));
+
     let noise_value = noise.get_noise_2d(x, y);
     let intensity = clamp_with_universe(vec2(-1.0, 1.0), vec2(0.0, 1.0), noise_value);
 
-    Color::white() * intensity
+    colors[0] * intensity
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {

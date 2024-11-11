@@ -1,3 +1,4 @@
+use fastnoise_lite::FastNoiseLite;
 use minifb::{Key, KeyRepeat, Window, WindowOptions};
 use mouse_rs::Mouse;
 use nalgebra_glm::{vec3, Vec3};
@@ -8,7 +9,7 @@ use three_d_rendering::blenders::BlendMode;
 use three_d_rendering::camera::Camera;
 use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
-use three_d_rendering::planets::{create_disco_planet, create_ocean_planet};
+use three_d_rendering::planets::{create_disco_planet, create_gas_giant, create_ocean_planet};
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
     create_model_matrix, create_noise, create_projection_matrix, create_view_matrix,
@@ -53,7 +54,9 @@ fn main() {
         (window_width, window_height),
         (framebuffer_width, framebuffer_height),
     );
-    render(&mut framebuffer, &data);
+    let mut noise = FastNoiseLite::with_seed(1506);
+    noise.set_frequency(Some(0.004));
+    render(&mut framebuffer, &data, &mut noise);
 
     let mut splash_timer = 0;
     let splash_delay = 300;
@@ -89,6 +92,7 @@ fn main() {
 
                 Key::Key1 => Some(Message::ChangePlanet(create_disco_planet())),
                 Key::Key2 => Some(Message::ChangePlanet(create_ocean_planet())),
+                Key::Key3 => Some(Message::ChangePlanet(create_gas_giant())),
 
                 // Key::Tab => {
                 //     should_update = true;
@@ -124,7 +128,7 @@ fn main() {
 
         if data.camera.has_changed() || should_update {
             framebuffer.clear();
-            render(&mut framebuffer, &data);
+            render(&mut framebuffer, &data, &mut noise);
         }
         data.camera.reset_change();
 
@@ -153,11 +157,11 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
 
-    let disco_planet = create_disco_planet();
-    let star_planet = create_ocean_planet();
+    let start_planet = create_gas_giant();
 
-    let render_entities = vec![disco_planet];
-    let entities = vec![star_planet];
+    let render_entities = vec![start_planet];
+    // let render_entities = vec![];
+    let entities = vec![];
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
@@ -181,7 +185,6 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
                 framebuffer_height as f32,
             ),
             time: 0.0,
-            noise: create_noise(),
         },
         rotation,
         translation,

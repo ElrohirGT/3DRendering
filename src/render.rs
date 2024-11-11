@@ -1,3 +1,4 @@
+use fastnoise_lite::FastNoiseLite;
 use nalgebra_glm::{Mat4, Vec3};
 use rayon::prelude::*;
 
@@ -9,7 +10,7 @@ use crate::{
     Entity, Model,
 };
 
-pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
+pub fn render(framebuffer: &mut Framebuffer, data: &Model, noise: &mut FastNoiseLite) {
     let Model {
         render_entities,
         uniforms,
@@ -43,7 +44,7 @@ pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
             // println!("Applying fragment shaders...");
             let fragments = fragments
                 .into_iter()
-                .map(|f| fragment_shader(f, shaders, uniforms))
+                .map(|f| fragment_shader(f, shaders, uniforms, noise))
                 .collect();
             // println!("Fragment shaders applied!");
 
