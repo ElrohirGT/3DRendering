@@ -36,11 +36,15 @@ impl Color {
         Self::black()
     }
 
-    // pub fn lerp(&self, other: Color, t: f32) -> Self {
-    //     let t = t.clamp(0.0, 1.0);
-    //
-    //     Color::new(self.r as f32 + (other.r as f32 - self.r as f32) * t);
-    // }
+    pub fn lerp(&self, other: &Color, t: f32) -> Self {
+        let t = t.clamp(0.0, 1.0);
+
+        Color::new(
+            (self.r as f32 + (other.r as f32 - self.r as f32) * t).round() as u8,
+            (self.g as f32 + (other.g as f32 - self.g as f32) * t).round() as u8,
+            (self.b as f32 + (other.b as f32 - self.b as f32) * t).round() as u8,
+        )
+    }
 
     pub fn change_brightness_by(&self, factor: f32) -> Self {
         let Color { r, g, b } = self;

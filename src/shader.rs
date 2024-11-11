@@ -53,8 +53,9 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 }
 
 pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
-    let fragment = stripes_shader(fragment, uniforms);
-    intensity_shader(fragment, uniforms)
+    fragment
+        .apply(uniforms, stripes_shader)
+        .apply(uniforms, intensity_shader)
 }
 
 fn intensity_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
@@ -101,7 +102,12 @@ fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
 
     // TODO: Keep implementing...
 
-    Fragment { ..fragment }
+    let color = color1
+        .lerp(&color2, wave1)
+        .lerp(&color3, wave2)
+        .lerp(&color1, wave3);
+
+    Fragment { color, ..fragment }
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {

@@ -1,4 +1,4 @@
-use crate::{color::Color, vertex::Vertex};
+use crate::{color::Color, shader::Uniforms, vertex::Vertex};
 use nalgebra_glm::{dot, vec3_to_vec2, Vec2, Vec3};
 
 pub struct Fragment {
@@ -34,6 +34,13 @@ impl Fragment {
             depth,
             vertex_position,
         }
+    }
+
+    pub fn apply<T>(self, uniforms: &Uniforms, func: T) -> Fragment
+    where
+        T: Fn(Fragment, &Uniforms) -> Fragment,
+    {
+        func(self, uniforms)
     }
 }
 
