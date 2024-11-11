@@ -144,42 +144,42 @@ fn main() {
     }
 }
 
-/// Init the default state
-fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize)) -> Model {
-    // let mut args = env::args();
-    // args.next();
-    //
-    // let asset_dir = args.next().expect("No asset directory received!");
-    // println!("Reading assets from: {asset_dir}");
-
-    let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
-    let (window_width, window_height) = window_dimensions;
+fn create_disco_planet() -> Entity {
     let planet_obj = load_objs("sphere.obj").unwrap();
     let shaders = vec![
-        // (
-        //     ShaderType::MovingStripes {
-        //         speed: 1e-4,
-        //         stripe_width: 0.1,
-        //     },
-        //     vec![Color::pink(), Color::green()],
-        //     BlendMode::Replace,
-        // ),
+        (
+            ShaderType::MovingStripes {
+                speed: 1e-3,
+                stripe_width: 0.1,
+            },
+            vec![Color::pink(), Color::green()],
+            BlendMode::Replace,
+        ),
         (
             ShaderType::MovingStripes {
                 speed: 1e-4,
                 stripe_width: 0.1,
             },
-            vec![Color::green(), Color::blue()],
-            BlendMode::Replace,
+            vec![Color::black(), Color::blue()],
+            BlendMode::Normal,
         ),
         (ShaderType::Intensity, vec![], BlendMode::Replace),
     ];
-    let mercury = Entity {
+
+    Entity {
         objs: planet_obj,
         shaders,
-    };
+    }
+}
 
-    let render_entities = vec![mercury];
+/// Init the default state
+fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize)) -> Model {
+    let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
+    let (window_width, window_height) = window_dimensions;
+
+    let disco_planet = create_disco_planet();
+
+    let render_entities = vec![disco_planet];
     let entities = vec![];
 
     let camera = Camera::new(
