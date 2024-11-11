@@ -1,4 +1,3 @@
 # 3DRendering
 
-Example render:
-![](./untitled.gif)
+[Video Demo](https://youtu.be/EBa2QWrVing)
