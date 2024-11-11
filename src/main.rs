@@ -164,7 +164,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
 
-    let start_planet = create_sun();
+    let start_planet = create_green_planet();
 
     let render_entities = vec![start_planet];
     // let render_entities = vec![];

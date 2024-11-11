@@ -200,5 +200,49 @@ pub fn create_sun() -> Entity {
 }
 
 pub fn create_green_planet() -> Entity {
-    create_face_planet()
+    let planet_obj = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (
+            ShaderType::BaseColor,
+            vec![Color::blue()],
+            BlendMode::Replace,
+        ),
+        (
+            ShaderType::FBmShader {
+                zoom: 200.0,
+                speed: 0.1,
+                fractal: FractalConfig {
+                    octaves: 4,
+                    lacunarity: 2.0,
+                    gain: 0.5,
+                    weighted_strength: 0.0,
+                    f_type: fastnoise_lite::FractalType::None,
+                },
+            },
+            vec![0x087227.into()],
+            BlendMode::Difference,
+        ),
+        // (
+        //     ShaderType::FBmShader {
+        //         zoom: 200.0,
+        //         speed: 0.0,
+        //         fractal: FractalConfig {
+        //             octaves: 4,
+        //             lacunarity: 2.0,
+        //             gain: 0.5,
+        //             weighted_strength: 0.0,
+        //             f_type: fastnoise_lite::FractalType::None,
+        //         },
+        //     },
+        //     vec![Color::new(0, 0, 100)],
+        //     BlendMode::Subtract,
+        // ),
+        // (ShaderType::Intensity, vec![], BlendMode::Replace),
+    ];
+
+    Entity {
+        objs: planet_obj,
+        model_matrix: create_default_planet_model_matrix(),
+        shaders,
+    }
 }
