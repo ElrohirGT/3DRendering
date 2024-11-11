@@ -1,8 +1,8 @@
 use camera::Camera;
+use color::Color;
 use nalgebra_glm::Vec3;
 use obj::Obj;
-use shader::Uniforms;
-use vertex::Vertex;
+use shader::{ShaderType, Uniforms};
 
 pub mod bmp;
 pub mod camera;
@@ -25,8 +25,16 @@ pub enum Message {
     ZoomCamera(f32),
     UpdateTime(f32),
 }
-pub struct Model {
+
+pub type EntityShader = (ShaderType, Vec<Color>);
+
+pub struct Entity {
     pub objs: Vec<Obj>,
+    pub shaders: Vec<EntityShader>,
+}
+
+pub struct Model {
+    pub entities: Vec<Entity>,
     pub uniforms: Uniforms,
     pub rotation: Vec3,
     pub translation: Vec3,

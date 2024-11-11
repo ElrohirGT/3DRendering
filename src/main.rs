@@ -5,13 +5,14 @@ use std::collections::VecDeque;
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
 use three_d_rendering::camera::Camera;
-use three_d_rendering::framebuffer;
+use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
     create_model_matrix, create_projection_matrix, create_view_matrix, create_viewport_matrix,
-    Uniforms,
+    ShaderType, Uniforms,
 };
+use three_d_rendering::{framebuffer, Entity};
 use three_d_rendering::{Message, Model};
 
 const ZOOM_SPEED: f32 = 1.0;
@@ -152,7 +153,28 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let obj = load_objs("sphere.obj").unwrap();
+    let objs = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (ShaderType::BaseColor, vec![Color::black()]),
+        (
+            ShaderType::MovingStripes {
+                speed: 1e-4,
+                stripe_width: 0.1,
+            },
+            vec![Color::pink(), Color::green()],
+        ),
+        (
+            ShaderType::MovingStripes {
+                speed: 1e-4,
+                stripe_width: 0.1,
+            },
+            vec![Color::green(), Color::blue()],
+        ),
+        (ShaderType::Intensity, vec![]),
+    ];
+    let planet = Entity { objs, shaders };
+
+    let entities = vec![planet];
 
     let camera = Camera::new(
         Vec3::new(0.0, 0.0, 10.0),
@@ -166,7 +188,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     let translation = vec3(0.0, 0.0, 0.0);
 
     Model {
-        objs: obj,
+        entities,
         uniforms: Uniforms {
             model_matrix: create_model_matrix(translation, scale, rotation),
             view_matrix: create_view_matrix(camera.eye, camera.center, camera.up),

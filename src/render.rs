@@ -6,46 +6,48 @@ use crate::{
     framebuffer::Framebuffer,
     shader::{fragment_shader, vertex_shader, Uniforms},
     vertex::Vertex,
-    Model,
+    Entity, Model,
 };
 
 pub fn render(framebuffer: &mut Framebuffer, data: &Model) {
     let Model {
-        objs,
+        entities,
         uniforms,
         camera,
         ..
     } = data;
 
-    for obj in objs {
-        let vertex_array = obj;
+    for entity in entities {
+        let Entity { objs, shaders } = entity;
 
-        // Vertex Shader
-        println!("Applying shaders...");
-        let new_vertices = apply_shaders(vertex_array, uniforms);
-        println!("Vertex shader applied!");
+        for vertex_array in objs {
+            // Vertex Shader
+            println!("Applying shaders...");
+            let new_vertices = apply_shaders(vertex_array, uniforms);
+            println!("Vertex shader applied!");
 
-        // Primitive assembly
-        println!("Assembly...");
-        let triangles = assembly(&new_vertices);
-        println!("Assembly done!");
+            // Primitive assembly
+            println!("Assembly...");
+            let triangles = assembly(&new_vertices);
+            println!("Assembly done!");
 
-        // Rasterization
-        println!("Applying rasterization...");
-        let fragments = rasterize(triangles, &camera.direction());
-        println!("Rasterization applied!");
+            // Rasterization
+            println!("Applying rasterization...");
+            let fragments = rasterize(triangles, &camera.direction());
+            println!("Rasterization applied!");
 
-        println!("Applying fragment shaders...");
-        let fragments = fragments
-            .into_iter()
-            .map(|f| fragment_shader(f, uniforms))
-            .collect();
-        println!("Fragment shaders applied!");
+            println!("Applying fragment shaders...");
+            let fragments = fragments
+                .into_iter()
+                .map(|f| fragment_shader(f, shaders, uniforms))
+                .collect();
+            println!("Fragment shaders applied!");
 
-        // Fragment Processing
-        println!("Painting fragments...");
-        paint_fragments(fragments, framebuffer);
-        println!("Fragments painted!");
+            // Fragment Processing
+            println!("Painting fragments...");
+            paint_fragments(fragments, framebuffer);
+            println!("Fragments painted!");
+        }
     }
 }
 

@@ -36,12 +36,12 @@ impl Fragment {
         }
     }
 
-    pub fn apply<T>(self, uniforms: &Uniforms, func: T) -> Fragment
-    where
-        T: Fn(Fragment, &Uniforms) -> Fragment,
-    {
-        func(self, uniforms)
-    }
+    // pub fn apply<T>(self, uniforms: &Uniforms, func: T) -> Fragment
+    // where
+    //     T: Fn(Fragment, &Uniforms) -> Fragment,
+    // {
+    //     func(self, uniforms)
+    // }
 }
 
 pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {

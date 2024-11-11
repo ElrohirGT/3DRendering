@@ -2,7 +2,15 @@ use std::f32::consts::PI;
 
 use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
 
-use crate::{color::Color, fragment::Fragment, vertex::Vertex};
+use crate::{color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
+
+pub enum ShaderType {
+    Stripe { stripe_width: f32 },
+    MovingStripes { speed: f32, stripe_width: f32 },
+    AliveCheckerboard,
+    Intensity,
+    BaseColor,
+}
 
 pub struct Uniforms {
     pub model_matrix: Mat4,
@@ -53,14 +61,33 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
     }
 }
 
-pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
-    fragment
-        // .apply(uniforms, stripes_shader)
-        .apply(uniforms, moving_stripes)
-    // .apply(uniforms, intensity_shader)
+pub fn fragment_shader(
+    fragment: Fragment,
+    inputs: &[EntityShader],
+    uniforms: &Uniforms,
+) -> Fragment {
+    inputs
+        .iter()
+        .fold(fragment, |acc, current| match current.0 {
+            ShaderType::Stripe { stripe_width } => stripes_shader(acc, stripe_width, &current.1),
+            ShaderType::MovingStripes {
+                stripe_width,
+                speed,
+            } => moving_stripes(acc, stripe_width, speed, &current.1, uniforms),
+            ShaderType::AliveCheckerboard => todo!(),
+            ShaderType::Intensity => intensity_shader(acc),
+            ShaderType::BaseColor => base_color_shader(acc, current.1[0]),
+        })
 }
 
-fn intensity_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+fn base_color_shader(fragment: Fragment, base_color: Color) -> Fragment {
+    Fragment {
+        color: base_color,
+        ..fragment
+    }
+}
+
+fn intensity_shader(fragment: Fragment) -> Fragment {
     let Fragment {
         color, intensity, ..
     } = fragment;
@@ -70,18 +97,9 @@ fn intensity_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     Fragment { color, ..fragment }
 }
 
-fn stripes_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+fn stripes_shader(fragment: Fragment, stripe_width: f32, colors: &[Color]) -> Fragment {
     let y = fragment.vertex_position.y;
     // let y = fragment.position.y as usize;
-
-    let colors = [
-        Color::new(255, 0, 0),
-        Color::new(0, 255, 0),
-        Color::new(0, 0, 255),
-        Color::new(255, 255, 0),
-    ];
-
-    let stripe_width = 0.1;
 
     let stripe_idx = (y / stripe_width).abs() as usize % colors.len();
     let color = colors[stripe_idx];
@@ -112,12 +130,15 @@ fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     Fragment { color, ..fragment }
 }
 
-fn moving_stripes(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
-    let color1 = Color::new(255, 0, 0);
-    let color2 = Color::new(0, 0, 255);
-
-    let stripe_width = 0.2;
-    let speed = 1e-4;
+fn moving_stripes(
+    fragment: Fragment,
+    stripe_width: f32,
+    speed: f32,
+    colors: &[Color],
+    uniforms: &Uniforms,
+) -> Fragment {
+    let color1 = colors[0];
+    let color2 = colors[1];
 
     let moving_y = fragment.vertex_position.y + uniforms.time * speed;
 
