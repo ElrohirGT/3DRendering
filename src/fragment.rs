@@ -6,24 +6,33 @@ pub struct Fragment {
     pub color: Color,
     pub intensity: f32,
     pub depth: f32,
+    pub vertex_position: Vec3,
 }
 
 impl Fragment {
-    pub fn new(position: Vec2, color: Color, depth: f32) -> Self {
+    pub fn new(position: Vec2, color: Color, depth: f32, vertex_position: Vec3) -> Self {
         Fragment {
             position,
             color,
             depth,
+            vertex_position,
             intensity: 1.0,
         }
     }
 
-    pub fn new_with_intensity(position: Vec2, color: Color, depth: f32, intensity: f32) -> Self {
+    pub fn new_with_intensity(
+        position: Vec2,
+        color: Color,
+        depth: f32,
+        vertex_position: Vec3,
+        intensity: f32,
+    ) -> Self {
         Fragment {
             position,
             color,
             intensity,
             depth,
+            vertex_position,
         }
     }
 }
@@ -48,6 +57,7 @@ pub fn line(a: &Vertex, b: &Vertex) -> Vec<Fragment> {
             vec3_to_vec2(&new_position),
             Color::pink(),
             0.0,
+            new_position,
         ));
         accum += step_size;
     }
@@ -72,7 +82,7 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
     let triangle_area = edge_function(&a, &b, &vec3_to_vec2(&c));
     let (min, max) = calculate_bounding_box(&a, &b, &c);
 
-    let light_dir = Vec3::new(0.0, 0.5, -1.0).normalize();
+    let light_dir = Vec3::new(0.0, 0.5, 1.0).normalize();
     let base_color = Color::new(100, 100, 100);
 
     let step_size = 5e-1;
@@ -87,11 +97,14 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
                 let currentx = min.x + step_size * (x_idx as f32);
 
                 let point = Vec2::new(currentx, currenty);
-                let (u, v, w) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
+                let (w1, w2, w3) = barycentric_coordinates(&point, &a, &b, &c, triangle_area);
 
-                if (0.0..=1.0).contains(&u) && (0.0..=1.0).contains(&v) && (0.0..=1.0).contains(&w)
+                if (0.0..=1.0).contains(&w1)
+                    && (0.0..=1.0).contains(&w2)
+                    && (0.0..=1.0).contains(&w3)
                 {
-                    let normal = u * v1.normal + v * v2.normal + w * v3.normal;
+                    // Interpolated normal...
+                    let normal = w1 * v1.normal + w2 * v2.normal + w3 * v3.normal;
                     let normal = normal.normalize();
                     let camera_intensity = dot(&normal, camera_direction);
                     if camera_intensity >= 0.0 {
@@ -104,9 +117,17 @@ pub fn triangle(v1: &Vertex, v2: &Vertex, v3: &Vertex, camera_direction: &Vec3) 
                     //     println!("The intensity is {intensity}! {light_dir:?} dot {normal:?}");
                     // }
 
-                    let depth = u * a.z + v * b.z + w * c.z;
+                    // Interpolated depth...
+                    let depth = w1 * a.z + w2 * b.z + w3 * c.z;
+
+                    // Interpolated position...
+                    // let position = a;
+                    // FIXME: For now the normal is fine, but this should ideally be
+                    // a position using barycentrics
+                    let position = normal;
+                    // let position = a * w1 + b * w2 + c * w3;
                     Some(Fragment::new_with_intensity(
-                        point, base_color, depth, intensity,
+                        point, base_color, depth, position, intensity,
                     ))
                 } else {
                     None

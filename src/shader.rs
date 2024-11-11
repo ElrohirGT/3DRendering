@@ -1,8 +1,9 @@
-use core::f32;
+// use core::f32;
+use std::f32::consts::PI;
 
 use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
 
-use crate::{fragment::Fragment, vertex::Vertex};
+use crate::{color::Color, fragment::Fragment, vertex::Vertex};
 
 pub struct Uniforms {
     pub model_matrix: Mat4,
@@ -52,6 +53,11 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 }
 
 pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+    let fragment = stripes_shader(fragment, uniforms);
+    intensity_shader(fragment, uniforms)
+}
+
+fn intensity_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     let Fragment {
         color, intensity, ..
     } = fragment;
@@ -59,6 +65,43 @@ pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     let color = color * intensity;
 
     Fragment { color, ..fragment }
+}
+
+fn stripes_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+    let y = fragment.vertex_position.y;
+    // let y = fragment.position.y as usize;
+
+    let colors = [
+        Color::new(255, 0, 0),
+        Color::new(0, 255, 0),
+        Color::new(0, 0, 255),
+        Color::new(255, 255, 0),
+    ];
+
+    let stripe_width = 0.1;
+
+    let stripe_idx = (y / stripe_width).abs() as usize % colors.len();
+    let color = colors[stripe_idx];
+
+    Fragment { color, ..fragment }
+}
+
+fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+    let color1 = Color::red();
+    let color2 = Color::green();
+    let color3 = Color::blue();
+
+    let x = fragment.vertex_position.x;
+    let y = fragment.vertex_position.y;
+    let frequency = 10.0;
+
+    let wave1 = (x * 7.0 * frequency + y * 5.0 * frequency).sin() * 0.5 + 0.5;
+    let wave2 = (x * 5.0 * frequency - y * 8.0 * frequency + PI / 3.0).sin() * 0.5 + 0.5;
+    let wave3 = (y * 6.0 * frequency + x * 4.0 * frequency + 2.0 * PI / 3.0).sin() * 0.5 + 0.5;
+
+    // TODO: Keep implementing...
+
+    Fragment { ..fragment }
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {
@@ -108,7 +151,7 @@ pub fn create_view_matrix(eye: Vec3, center: Vec3, up: Vec3) -> Mat4 {
 }
 
 pub fn create_projection_matrix(window_width: f32, window_height: f32) -> Mat4 {
-    let fov = 45.0 * f32::consts::PI / 180.0;
+    let fov = 45.0 * PI / 180.0;
     let aspect_ratio = window_width / window_height;
     let near = 0.1;
     let far = 1000.0;

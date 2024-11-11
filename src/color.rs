@@ -26,15 +26,21 @@ impl Color {
         Color::new(0xff, 0, 0)
     }
     pub const fn blue() -> Self {
-        Color::new(0, 0xff, 0)
+        Color::new(0, 0, 0xff)
     }
     pub const fn green() -> Self {
-        Color::new(0, 0, 0xff)
+        Color::new(0, 0xff, 0)
     }
 
     pub const fn default() -> Self {
         Self::black()
     }
+
+    // pub fn lerp(&self, other: Color, t: f32) -> Self {
+    //     let t = t.clamp(0.0, 1.0);
+    //
+    //     Color::new(self.r as f32 + (other.r as f32 - self.r as f32) * t);
+    // }
 
     pub fn change_brightness_by(&self, factor: f32) -> Self {
         let Color { r, g, b } = self;

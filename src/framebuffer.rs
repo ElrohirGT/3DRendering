@@ -50,7 +50,7 @@ impl Framebuffer {
     pub fn new(width: usize, height: usize) -> Self {
         let background_color = Color::default();
         let current_color = Color::white();
-        let empty_buffer = create_filled_buffer(&width, &height, &Color::new(0, 255, 0));
+        let empty_buffer = create_filled_buffer(&width, &height, &Color::default());
         let buffer = empty_buffer.clone();
         let z_buffer = create_filled_z_buffer(&width, &height, f32::NEG_INFINITY);
         let empty_z_buffer = z_buffer.clone();
