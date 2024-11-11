@@ -23,6 +23,7 @@ pub fn equal(a: f32, b: f32, eps: f32) -> bool {
 pub enum Message {
     RotateCamera(f32, f32),
     ZoomCamera(f32),
+    UpdateTime(f32),
 }
 pub struct Model {
     pub objs: Vec<Obj>,

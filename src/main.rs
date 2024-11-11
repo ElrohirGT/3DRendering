@@ -60,6 +60,7 @@ fn main() {
 
     let last_recorded_frames_max_count = 60;
     let mut last_recorded_frames = VecDeque::with_capacity(last_recorded_frames_max_count);
+    let mut time = 0.0;
     while window.is_open() {
         let mut should_update = false;
         let start = Instant::now();
@@ -71,7 +72,7 @@ fn main() {
             break;
         }
 
-        let messages: Vec<Message> = window
+        let mut messages: Vec<Message> = window
             .get_keys_pressed(KeyRepeat::Yes)
             .into_iter()
             .filter_map(|key| match key {
@@ -108,6 +109,8 @@ fn main() {
                 _ => None,
             })
             .collect();
+        should_update = true;
+        messages.push(Message::UpdateTime(time));
 
         for msg in messages {
             data = update(data, msg);
@@ -127,7 +130,9 @@ fn main() {
         if last_recorded_frames.len() == last_recorded_frames_max_count {
             last_recorded_frames.pop_front();
         }
-        last_recorded_frames.push_back((end - start).as_millis());
+        let render_millis = (end - start).as_millis();
+        last_recorded_frames.push_back(render_millis);
+        time += render_millis as f32;
 
         let avg_millis: f32 = last_recorded_frames.iter().map(|&u| u as f32).sum::<f32>()
             / last_recorded_frames_max_count as f32;
@@ -170,6 +175,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
                 framebuffer_width as f32,
                 framebuffer_height as f32,
             ),
+            time: 0.0,
         },
         scale,
         rotation,
@@ -221,6 +227,13 @@ fn update(data: Model, msg: Message) -> Model {
                 camera,
                 ..data
             }
+        }
+        Message::UpdateTime(time) => {
+            let Model { uniforms, .. } = data;
+
+            let uniforms = Uniforms { time, ..uniforms };
+
+            Model { uniforms, ..data }
         }
     }
 }

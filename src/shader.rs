@@ -1,4 +1,3 @@
-// use core::f32;
 use std::f32::consts::PI;
 
 use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
@@ -10,6 +9,7 @@ pub struct Uniforms {
     pub view_matrix: Mat4,
     pub projection_matrix: Mat4,
     pub viewport_matrix: Mat4,
+    pub time: f32,
 }
 
 pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
@@ -18,6 +18,7 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
         view_matrix,
         projection_matrix,
         viewport_matrix,
+        ..
     } = uniforms;
 
     let position = vec4(vertex.position.x, vertex.position.y, vertex.position.z, 1.0);
@@ -55,7 +56,7 @@ pub fn vertex_shader(vertex: &Vertex, uniforms: &Uniforms) -> Vertex {
 pub fn fragment_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
     fragment
         // .apply(uniforms, stripes_shader)
-        .apply(uniforms, interesting_shader)
+        .apply(uniforms, moving_stripes)
     // .apply(uniforms, intensity_shader)
 }
 
@@ -107,6 +108,21 @@ fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
         .lerp(&color2, wave1)
         .lerp(&color3, wave2)
         .lerp(&color1, wave3);
+
+    Fragment { color, ..fragment }
+}
+
+fn moving_stripes(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+    let color1 = Color::new(255, 0, 0);
+    let color2 = Color::new(0, 0, 255);
+
+    let stripe_width = 0.2;
+    let speed = 1e-4;
+
+    let moving_y = fragment.vertex_position.y + uniforms.time * speed;
+
+    let stripe_factor = ((moving_y / stripe_width) * PI).sin() * 0.5 + 0.5;
+    let color = color1.lerp(&color2, stripe_factor);
 
     Fragment { color, ..fragment }
 }
