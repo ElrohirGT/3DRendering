@@ -1,9 +1,11 @@
+use blenders::BlendMode;
 use camera::Camera;
 use color::Color;
 use nalgebra_glm::Vec3;
 use obj::Obj;
 use shader::{ShaderType, Uniforms};
 
+pub mod blenders;
 pub mod bmp;
 pub mod camera;
 pub mod color;
@@ -26,7 +28,7 @@ pub enum Message {
     UpdateTime(f32),
 }
 
-pub type EntityShader = (ShaderType, Vec<Color>);
+pub type EntityShader = (ShaderType, Vec<Color>, BlendMode);
 
 pub struct Entity {
     pub objs: Vec<Obj>,

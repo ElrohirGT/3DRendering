@@ -4,6 +4,7 @@ use nalgebra_glm::{vec3, Vec3};
 use std::collections::VecDeque;
 use std::f32::consts::PI;
 use std::time::{Duration, Instant};
+use three_d_rendering::blenders::BlendMode;
 use three_d_rendering::camera::Camera;
 use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
@@ -153,28 +154,32 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
 
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
-    let objs = load_objs("sphere.obj").unwrap();
+    let planet_obj = load_objs("sphere.obj").unwrap();
     let shaders = vec![
-        (ShaderType::BaseColor, vec![Color::black()]),
-        (
-            ShaderType::MovingStripes {
-                speed: 1e-4,
-                stripe_width: 0.1,
-            },
-            vec![Color::pink(), Color::green()],
-        ),
+        // (
+        //     ShaderType::MovingStripes {
+        //         speed: 1e-4,
+        //         stripe_width: 0.1,
+        //     },
+        //     vec![Color::pink(), Color::green()],
+        //     BlendMode::Replace,
+        // ),
         (
             ShaderType::MovingStripes {
                 speed: 1e-4,
                 stripe_width: 0.1,
             },
             vec![Color::green(), Color::blue()],
+            BlendMode::Replace,
         ),
-        (ShaderType::Intensity, vec![]),
+        (ShaderType::Intensity, vec![], BlendMode::Replace),
     ];
-    let planet = Entity { objs, shaders };
+    let mercury = Entity {
+        objs: planet_obj,
+        shaders,
+    };
 
-    let render_entities = vec![planet];
+    let render_entities = vec![mercury];
     let entities = vec![];
 
     let camera = Camera::new(

@@ -5,8 +5,19 @@ use nalgebra_glm::{vec3, vec4, Mat4, Vec3};
 use crate::{color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
 
 pub enum ShaderType {
-    Stripe { stripe_width: f32 },
-    MovingStripes { speed: f32, stripe_width: f32 },
+    Stripe {
+        stripe_width: f32,
+    },
+    MovingStripes {
+        speed: f32,
+        stripe_width: f32,
+    },
+    GlowShader {
+        stripe_width: f32,
+        glow_size: f32,
+        red: f32,
+        blue: f32,
+    },
     AliveCheckerboard,
     Intensity,
     BaseColor,
@@ -66,48 +77,47 @@ pub fn fragment_shader(
     inputs: &[EntityShader],
     uniforms: &Uniforms,
 ) -> Fragment {
-    inputs
-        .iter()
-        .fold(fragment, |acc, current| match current.0 {
-            ShaderType::Stripe { stripe_width } => stripes_shader(acc, stripe_width, &current.1),
+    let color = inputs.iter().fold(fragment.color, |acc, current| {
+        let color = match current.0 {
+            ShaderType::Stripe { stripe_width } => {
+                stripes_shader(&fragment, stripe_width, &current.1)
+            }
             ShaderType::MovingStripes {
                 stripe_width,
                 speed,
-            } => moving_stripes(acc, stripe_width, speed, &current.1, uniforms),
+            } => moving_stripes(&fragment, stripe_width, speed, &current.1, uniforms),
             ShaderType::AliveCheckerboard => todo!(),
-            ShaderType::Intensity => intensity_shader(acc),
-            ShaderType::BaseColor => base_color_shader(acc, current.1[0]),
-        })
-}
+            ShaderType::Intensity => intensity_shader(&fragment, &acc),
+            ShaderType::BaseColor => current.1[0],
+            ShaderType::GlowShader {
+                stripe_width,
+                glow_size,
+                red,
+                blue,
+            } => glowing_shader(&fragment, stripe_width, glow_size, red, blue),
+        };
 
-fn base_color_shader(fragment: Fragment, base_color: Color) -> Fragment {
-    Fragment {
-        color: base_color,
-        ..fragment
-    }
-}
-
-fn intensity_shader(fragment: Fragment) -> Fragment {
-    let Fragment {
-        color, intensity, ..
-    } = fragment;
-
-    let color = color * intensity;
+        acc.blend(&color, &current.2)
+    });
 
     Fragment { color, ..fragment }
 }
 
-fn stripes_shader(fragment: Fragment, stripe_width: f32, colors: &[Color]) -> Fragment {
+fn intensity_shader(fragment: &Fragment, current_color: &Color) -> Color {
+    let Fragment { intensity, .. } = fragment;
+
+    *current_color * *intensity
+}
+
+fn stripes_shader(fragment: &Fragment, stripe_width: f32, colors: &[Color]) -> Color {
     let y = fragment.vertex_position.y;
     // let y = fragment.position.y as usize;
 
     let stripe_idx = (y / stripe_width).abs() as usize % colors.len();
-    let color = colors[stripe_idx];
-
-    Fragment { color, ..fragment }
+    colors[stripe_idx]
 }
 
-fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
+fn interesting_shader(fragment: &Fragment, uniforms: &Uniforms) -> Color {
     let color1 = Color::red();
     let color2 = Color::green();
     let color3 = Color::blue();
@@ -122,21 +132,40 @@ fn interesting_shader(fragment: Fragment, uniforms: &Uniforms) -> Fragment {
 
     // TODO: Keep implementing...
 
-    let color = color1
+    color1
         .lerp(&color2, wave1)
         .lerp(&color3, wave2)
-        .lerp(&color1, wave3);
+        .lerp(&color1, wave3)
+}
 
-    Fragment { color, ..fragment }
+fn glowing_shader(
+    fragment: &Fragment,
+    stripe_width: f32,
+    glow_size: f32,
+    red: f32,
+    blue: f32,
+) -> Color {
+    let y = fragment.vertex_position.y;
+
+    let distance_to_center = (y % stripe_width - stripe_width / 2.0).abs();
+    let glow_intensity = ((1.0 - (distance_to_center / glow_size).min(1.0)) * PI / 2.0).sin();
+
+    let color = Color::new(
+        (red * glow_intensity * 255.0) as u8,
+        (blue * glow_intensity * 255.0) as u8,
+        (glow_intensity * 255.0) as u8,
+    );
+
+    color
 }
 
 fn moving_stripes(
-    fragment: Fragment,
+    fragment: &Fragment,
     stripe_width: f32,
     speed: f32,
     colors: &[Color],
     uniforms: &Uniforms,
-) -> Fragment {
+) -> Color {
     let color1 = colors[0];
     let color2 = colors[1];
 
@@ -145,7 +174,7 @@ fn moving_stripes(
     let stripe_factor = ((moving_y / stripe_width) * PI).sin() * 0.5 + 0.5;
     let color = color1.lerp(&color2, stripe_factor);
 
-    Fragment { color, ..fragment }
+    color
 }
 
 pub fn create_model_matrix(translation: Vec3, scale: f32, rotation: Vec3) -> Mat4 {

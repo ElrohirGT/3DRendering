@@ -46,6 +46,10 @@ impl Color {
         )
     }
 
+    pub fn is_black(&self) -> bool {
+        self.r == 0 && self.g == 0 && self.b == 0
+    }
+
     pub fn change_brightness_by(&self, factor: f32) -> Self {
         let Color { r, g, b } = self;
         let r = (*r as f32 * factor).round() as u8;
