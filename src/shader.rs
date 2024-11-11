@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use fastnoise_lite::FastNoiseLite;
+use fastnoise_lite::{CellularDistanceFunction, CellularReturnType, FastNoiseLite};
 use nalgebra_glm::{vec2, vec3, vec4, Mat4, Vec3};
 
 use crate::{clamp_with_universe, color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
@@ -25,11 +25,29 @@ pub enum ShaderType {
     FBmShader {
         zoom: f32,
         speed: f32,
-        octaves: i32,
-        lacunarity: f32,
-        gain: f32,
-        weighted_strength: f32,
+        fractal: FractalConfig,
     },
+    CellularShader {
+        zoom: f32,
+        speed: f32,
+        fractal: FractalConfig,
+        cellular: CellularConfig,
+    },
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct FractalConfig {
+    pub octaves: i32,
+    pub lacunarity: f32,
+    pub gain: f32,
+    pub weighted_strength: f32,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct CellularConfig {
+    pub distance_func: CellularDistanceFunction,
+    pub return_type: CellularReturnType,
+    pub jitter: f32,
 }
 
 pub struct Uniforms {
@@ -113,21 +131,17 @@ pub fn fragment_shader(
             ShaderType::FBmShader {
                 zoom,
                 speed,
-                lacunarity,
-                octaves,
-                gain,
-                weighted_strength,
+                fractal,
             } => fbm_shader(
-                &fragment,
-                uniforms,
-                &current.1,
-                speed,
+                &fragment, uniforms, &current.1, speed, zoom, &fractal, noise,
+            ),
+            ShaderType::CellularShader {
                 zoom,
-                octaves,
-                gain,
-                weighted_strength,
-                lacunarity,
-                noise,
+                speed,
+                fractal,
+                cellular,
+            } => cellular_shader(
+                &fragment, uniforms, &current.1, speed, zoom, &fractal, &cellular, noise,
             ),
         };
 
@@ -135,6 +149,49 @@ pub fn fragment_shader(
     });
 
     Fragment { color, ..fragment }
+}
+
+fn cellular_shader(
+    fragment: &Fragment,
+    uniforms: &Uniforms,
+    colors: &[Color],
+    speed: f32,
+    zoom: f32,
+    fractal: &FractalConfig,
+    cellular: &CellularConfig,
+    noise: &mut FastNoiseLite,
+) -> Color {
+    let Uniforms { time, .. } = uniforms;
+    let FractalConfig {
+        octaves,
+        lacunarity,
+        gain,
+        weighted_strength,
+    } = *fractal;
+    let CellularConfig {
+        distance_func,
+        return_type,
+        jitter,
+    } = *cellular;
+
+    let x = fragment.vertex_position.x * zoom + speed * time;
+    let y = fragment.vertex_position.y * zoom;
+
+    noise.set_noise_type(Some(fastnoise_lite::NoiseType::Cellular));
+    noise.set_fractal_octaves(Some(octaves));
+    noise.set_fractal_gain(Some(gain));
+    noise.set_fractal_weighted_strength(Some(weighted_strength));
+    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
+    noise.set_fractal_lacunarity(Some(lacunarity));
+
+    noise.set_cellular_distance_function(Some(distance_func));
+    noise.set_cellular_return_type(Some(return_type));
+    noise.set_cellular_jitter(Some(jitter));
+
+    let noise_value = noise.get_noise_2d(x, y);
+    let intensity = clamp_with_universe(vec2(-1.0, 1.0), vec2(0.0, 1.0), noise_value);
+
+    colors[0] * intensity
 }
 
 fn intensity_shader(fragment: &Fragment, current_color: &Color) -> Color {
@@ -213,13 +270,16 @@ fn fbm_shader(
     colors: &[Color],
     speed: f32,
     zoom: f32,
-    octaves: i32,
-    gain: f32,
-    weighted_strength: f32,
-    lacunarity: f32,
+    fractal: &FractalConfig,
     noise: &mut FastNoiseLite,
 ) -> Color {
     let Uniforms { time, .. } = uniforms;
+    let FractalConfig {
+        octaves,
+        lacunarity,
+        gain,
+        weighted_strength,
+    } = *fractal;
 
     let x = fragment.vertex_position.x * zoom + speed * time;
     let y = fragment.vertex_position.y * zoom;
