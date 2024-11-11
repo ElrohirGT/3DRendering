@@ -1,6 +1,6 @@
 use std::f32::consts::PI;
 
-use fastnoise_lite::{CellularDistanceFunction, CellularReturnType, FastNoiseLite};
+use fastnoise_lite::{CellularDistanceFunction, CellularReturnType, FastNoiseLite, FractalType};
 use nalgebra_glm::{vec2, vec3, vec4, Mat4, Vec3};
 
 use crate::{clamp_with_universe, color::Color, fragment::Fragment, vertex::Vertex, EntityShader};
@@ -41,6 +41,7 @@ pub struct FractalConfig {
     pub lacunarity: f32,
     pub gain: f32,
     pub weighted_strength: f32,
+    pub f_type: FractalType,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -167,6 +168,7 @@ fn cellular_shader(
         lacunarity,
         gain,
         weighted_strength,
+        f_type,
     } = *fractal;
     let CellularConfig {
         distance_func,
@@ -181,7 +183,7 @@ fn cellular_shader(
     noise.set_fractal_octaves(Some(octaves));
     noise.set_fractal_gain(Some(gain));
     noise.set_fractal_weighted_strength(Some(weighted_strength));
-    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
+    noise.set_fractal_type(Some(f_type));
     noise.set_fractal_lacunarity(Some(lacunarity));
 
     noise.set_cellular_distance_function(Some(distance_func));
@@ -279,6 +281,7 @@ fn fbm_shader(
         lacunarity,
         gain,
         weighted_strength,
+        f_type,
     } = *fractal;
 
     let x = fragment.vertex_position.x * zoom + speed * time;
@@ -288,7 +291,7 @@ fn fbm_shader(
     noise.set_fractal_gain(Some(gain));
     noise.set_fractal_weighted_strength(Some(weighted_strength));
     noise.set_noise_type(Some(fastnoise_lite::NoiseType::OpenSimplex2));
-    noise.set_fractal_type(Some(fastnoise_lite::FractalType::FBm));
+    noise.set_fractal_type(Some(f_type));
     noise.set_fractal_lacunarity(Some(lacunarity));
 
     let noise_value = noise.get_noise_2d(x, y);

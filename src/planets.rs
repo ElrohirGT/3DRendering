@@ -61,6 +61,7 @@ pub fn create_ocean_planet() -> Entity {
                     lacunarity: 2.0,
                     gain: 0.8,
                     weighted_strength: 0.0,
+                    f_type: fastnoise_lite::FractalType::FBm,
                 },
             },
             vec![Color::new(230, 230, 230)],
@@ -94,7 +95,7 @@ pub fn create_gas_giant() -> Entity {
     }
 }
 
-pub fn create_robot_planet() -> Entity {
+pub fn create_face_planet() -> Entity {
     let planet_obj = load_objs("sphere.obj").unwrap();
     let shaders = vec![
         (
@@ -106,6 +107,7 @@ pub fn create_robot_planet() -> Entity {
                     lacunarity: 2.0,
                     gain: 1.26,
                     weighted_strength: 0.0,
+                    f_type: fastnoise_lite::FractalType::FBm,
                 },
                 cellular: crate::shader::CellularConfig {
                     distance_func: fastnoise_lite::CellularDistanceFunction::EuclideanSq,
@@ -129,4 +131,74 @@ pub fn create_robot_planet() -> Entity {
         model_matrix: create_default_planet_model_matrix(),
         shaders,
     }
+}
+
+pub fn create_snow_planet() -> Entity {
+    let planet_obj = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (
+            ShaderType::FBmShader {
+                zoom: 500.0,
+                speed: 0.2,
+                fractal: FractalConfig {
+                    octaves: 3,
+                    lacunarity: 0.5,
+                    gain: 1.0,
+                    weighted_strength: 0.0,
+                    f_type: fastnoise_lite::FractalType::FBm,
+                },
+            },
+            vec![0xc2e9ed.into()],
+            BlendMode::Add,
+        ),
+        (ShaderType::Intensity, vec![], BlendMode::Replace),
+    ];
+
+    Entity {
+        objs: planet_obj,
+        model_matrix: create_default_planet_model_matrix(),
+        shaders,
+    }
+}
+
+pub fn create_sun() -> Entity {
+    let planet_obj = load_objs("sphere.obj").unwrap();
+    let shaders = vec![
+        (
+            ShaderType::BaseColor,
+            vec![0xf55e08.into()],
+            BlendMode::Replace,
+        ),
+        (
+            ShaderType::CellularShader {
+                zoom: 2000.0,
+                speed: 0.2,
+                fractal: FractalConfig {
+                    octaves: 4,
+                    lacunarity: 0.5,
+                    gain: 1.0,
+                    weighted_strength: 0.0,
+                    f_type: fastnoise_lite::FractalType::PingPong,
+                },
+                cellular: crate::shader::CellularConfig {
+                    distance_func: fastnoise_lite::CellularDistanceFunction::EuclideanSq,
+                    return_type: fastnoise_lite::CellularReturnType::Distance,
+                    jitter: 1.0,
+                },
+            },
+            vec![0xc2e9ed.into()],
+            BlendMode::Add,
+        ),
+        // (ShaderType::Intensity, vec![], BlendMode::Replace),
+    ];
+
+    Entity {
+        objs: planet_obj,
+        model_matrix: create_default_planet_model_matrix(),
+        shaders,
+    }
+}
+
+pub fn create_green_planet() -> Entity {
+    create_face_planet()
 }

@@ -10,7 +10,8 @@ use three_d_rendering::camera::Camera;
 use three_d_rendering::color::Color;
 use three_d_rendering::obj::load_objs;
 use three_d_rendering::planets::{
-    create_disco_planet, create_gas_giant, create_ocean_planet, create_robot_planet,
+    create_disco_planet, create_face_planet, create_gas_giant, create_green_planet,
+    create_ocean_planet, create_snow_planet, create_sun,
 };
 use three_d_rendering::render::render;
 use three_d_rendering::shader::{
@@ -95,7 +96,10 @@ fn main() {
                 Key::Key1 => Some(Message::ChangePlanet(create_disco_planet())),
                 Key::Key2 => Some(Message::ChangePlanet(create_ocean_planet())),
                 Key::Key3 => Some(Message::ChangePlanet(create_gas_giant())),
-                Key::Key4 => Some(Message::ChangePlanet(create_robot_planet())),
+                Key::Key4 => Some(Message::ChangePlanet(create_face_planet())),
+                Key::Key5 => Some(Message::ChangePlanet(create_snow_planet())),
+                Key::Key6 => Some(Message::ChangePlanet(create_sun())),
+                Key::Key7 => Some(Message::ChangePlanet(create_green_planet())),
 
                 // Key::Tab => {
                 //     should_update = true;
@@ -160,7 +164,7 @@ fn init(window_dimensions: (usize, usize), framebuffer_dimensions: (usize, usize
     let (framebuffer_height, framebuffer_width) = framebuffer_dimensions;
     let (window_width, window_height) = window_dimensions;
 
-    let start_planet = create_robot_planet();
+    let start_planet = create_sun();
 
     let render_entities = vec![start_planet];
     // let render_entities = vec![];
